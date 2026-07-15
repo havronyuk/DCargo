@@ -1,12 +1,14 @@
 package dccargo.dcargoservice.config;
 
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 
+@Getter
 @PropertySource("file:C:/YardConfig/config.properties")
 public class AppConfig {
 
@@ -40,5 +42,18 @@ public class AppConfig {
 
     @Value("${dcargoPort}")
     private Integer qualityport;
+
+    @Value("${datasourceDCargo}")
+    public String datasourceDCargo;
+
+    @Value("${usrnmDCargo}")
+    public String usrnmDCargo;
+
+    @Value("${dbIpSourceDCargo}")
+    public String dbIpSourceDCargo;
+
+    @Value("${dbPortSourceDCargo}")
+    public String dbPortSourceDCargo;
+
 
 }
