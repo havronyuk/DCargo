@@ -32,11 +32,6 @@ public class UserController {
 
     @PostMapping("/createUser")
     public ResponseEntity<User> create(@RequestBody User user) {
-
-        System.out.println(user);
-
-//        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
-
         User savedUser = userService.createUser(user);
 
         return ResponseEntity.ok(savedUser);
@@ -44,10 +39,6 @@ public class UserController {
 
     @PostMapping("/updateUser")
     public ResponseEntity<User> update(@RequestBody User user) {
-
-        System.out.println(user);
-
-//        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
 
         User savedUser = userService.update(user);
 
