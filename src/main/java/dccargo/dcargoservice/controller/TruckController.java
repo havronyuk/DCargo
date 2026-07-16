@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,16 +26,35 @@ public class TruckController {
         return ResponseEntity.ok("echo");
     }
     
+    /**
+     * Метод сохранения создания одной машины.
+     * 
+     * 
+     * @param truck
+     * @return
+     */
     @PostMapping("/createNewTruck")
     public ResponseEntity<Truck> create(@RequestBody Truck truck) {
-    	
-    	System.out.println(truck);
-
-//        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
-
+        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
         Truck savedTruck = truckService.create(truck);
-
         return ResponseEntity.ok(savedTruck);
+    }
+    
+    
+    /**
+     * Важно чтобы передавалось поле id
+     * @param truck
+     * @return
+     */
+    @PostMapping("/updateTruck")
+    public ResponseEntity<Truck> update(@RequestBody Truck truck) {
+
+        Truck updatedTruck = truckService.update(truck);
+        log.info("Обновление ТС. ID: {}, Госномер: {}",
+                truck.getId(),
+                truck.getRegistrationNumber());
+
+        return ResponseEntity.ok(updatedTruck);
     }
 
 }

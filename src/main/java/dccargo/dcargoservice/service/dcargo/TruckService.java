@@ -4,6 +4,7 @@ package dccargo.dcargoservice.service.dcargo;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import dccargo.dcargoservice.service.dcargo.exception.TruckException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +65,45 @@ public class TruckService {
     	//потом добавить userCreate
     	return truckRepository.save(truck);
 	}
+    
+    /**
+     * Метод обновления машин. <br> <b>Важно: проверяет все поля вручную!</b>
+     * @param truck
+     * @return
+     */
+    @Transactional
+    public Truck update(Truck truck) {
+    	if(truck.getId() == null ) {
+    		throw new TruckException("Отсутствует id в запросе");
+    	}
+
+        Truck dbTruck = truckRepository.findById(truck.getId())
+                .orElseThrow(() -> new TruckException("Транспортное средство не найдено"));
+
+        dbTruck.setInternalId(truck.getInternalId() != null ? truck.getInternalId() : dbTruck.getInternalId());
+        dbTruck.setInternalNumber(truck.getInternalNumber() != null ? truck.getInternalNumber() : dbTruck.getInternalNumber());
+        dbTruck.setGarageNumber(truck.getGarageNumber() != null ? truck.getGarageNumber() : dbTruck.getGarageNumber());
+        dbTruck.setRegistrationNumber(truck.getRegistrationNumber() != null ? truck.getRegistrationNumber() : dbTruck.getRegistrationNumber());
+        dbTruck.setVin(truck.getVin() != null ? truck.getVin() : dbTruck.getVin());
+        dbTruck.setBrand(truck.getBrand() != null ? truck.getBrand() : dbTruck.getBrand());
+        dbTruck.setModel(truck.getModel() != null ? truck.getModel() : dbTruck.getModel());
+        dbTruck.setManufactureYear(truck.getManufactureYear() != null ? truck.getManufactureYear() : dbTruck.getManufactureYear());
+        dbTruck.setTruckType(truck.getTruckType() != null ? truck.getTruckType() : dbTruck.getTruckType());
+        dbTruck.setLengthMm(truck.getLengthMm() != null ? truck.getLengthMm() : dbTruck.getLengthMm());
+        dbTruck.setWidthMm(truck.getWidthMm() != null ? truck.getWidthMm() : dbTruck.getWidthMm());
+        dbTruck.setHeightMm(truck.getHeightMm() != null ? truck.getHeightMm() : dbTruck.getHeightMm());
+        dbTruck.setVolumeM3(truck.getVolumeM3() != null ? truck.getVolumeM3() : dbTruck.getVolumeM3());
+        dbTruck.setMaxWeightKg(truck.getMaxWeightKg() != null ? truck.getMaxWeightKg() : dbTruck.getMaxWeightKg());
+        dbTruck.setMaxEuroPallets(truck.getMaxEuroPallets() != null ? truck.getMaxEuroPallets() : dbTruck.getMaxEuroPallets());
+        dbTruck.setMaxFinPallets(truck.getMaxFinPallets() != null ? truck.getMaxFinPallets() : dbTruck.getMaxFinPallets());
+        dbTruck.setMaxRollboxes(truck.getMaxRollboxes() != null ? truck.getMaxRollboxes() : dbTruck.getMaxRollboxes());
+        dbTruck.setCommissioningDate(truck.getCommissioningDate() != null ? truck.getCommissioningDate() : dbTruck.getCommissioningDate());
+        dbTruck.setDecommissioningDate(truck.getDecommissioningDate() != null ? truck.getDecommissioningDate() : dbTruck.getDecommissioningDate());
+        dbTruck.setStatus(truck.getStatus() != null ? truck.getStatus() : dbTruck.getStatus());
+        dbTruck.setComment(truck.getComment() != null ? truck.getComment() : dbTruck.getComment());
+        dbTruck.setUpdatedAt(LocalDateTime.now());
+        return truckRepository.save(dbTruck);
+    }
     
 
 }
