@@ -1,14 +1,13 @@
 package dccargo.dcargoservice.controller;
 
+import dccargo.dcargoservice.model.dcargo.Truck;
+import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.service.dcargo.UserService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -29,11 +28,31 @@ public class UserController {
 //
 //    }
 
-    @GetMapping("/getUsers")
+//    @GetMapping("/getUsers")
 
-//    @PostMapping("/createUser")
-//
-//    @PostMapping("/updateUser")
+    @PostMapping("/createUser")
+    public ResponseEntity<User> create(@RequestBody User user) {
+
+        System.out.println(user);
+
+//        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
+
+        User savedUser = userService.createUser(user);
+
+        return ResponseEntity.ok(savedUser);
+    }
+
+    @PostMapping("/updateUser")
+    public ResponseEntity<User> update(@RequestBody User user) {
+
+        System.out.println(user);
+
+//        log.info("Создание ТС. Госномер: {}", truck.getRegistrationNumber());
+
+        User savedUser = userService.update(user);
+
+        return ResponseEntity.ok(savedUser);
+    }
 
     @PostMapping("/deactivateUser")
     public ResponseEntity<?> deactivateUser(@RequestParam("idUser") Integer idUser){

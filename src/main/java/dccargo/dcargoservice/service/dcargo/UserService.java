@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.repository.dcargo.UserRepository;
+import dccargo.dcargoservice.service.dcargo.exception.TruckException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,24 @@ import java.util.Map;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    public User createUser(User user){
+        if(userRepository.existsByLoginTelephoneAndBlockIsFalse(user.getLoginTelephone())){
+            throw new TruckException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
+        }
+
+        return userRepository.save(user);
+
+    }
+
+    public User update(User user){
+        if(!userRepository.existsByIdUser(user.getIdUser())){
+            throw new TruckException("Пользователь c ID " + user.getIdUser() + " не обнаружен");
+        }
+
+        return userRepository.save(user);
+
+    }
 
 
     public Map<String, Object> deactivateUser(Integer idUser) {
