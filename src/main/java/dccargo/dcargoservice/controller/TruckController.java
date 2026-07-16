@@ -8,8 +8,11 @@ import dccargo.dcargoservice.service.dcargo.TruckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,10 +31,14 @@ public class TruckController {
         return ResponseEntity.ok("echo");
     }
     
+    @GetMapping("/getAllTruck")
+    public ResponseEntity<List<Truck>> getAllTruck() {
+    	List<Truck> trucks = truckService.getAllTruck();
+        return ResponseEntity.ok(trucks);
+    }
+    
     /**
      * Метод сохранения создания одной машины.
-     * 
-     * 
      * @param truck
      * @return
      */
@@ -59,11 +66,34 @@ public class TruckController {
         return ResponseEntity.ok(updatedTruck);
     }
     
+    
+    @GetMapping("/getTechnicalInspection/{id}")
+    public ResponseEntity<List<TechnicalInspection>> getTechnicalInspection(@PathVariable Long id) {
+    	List<TechnicalInspection> technicalInspections = technicalInspectionService.getByTruckId(id);
+        return ResponseEntity.ok(technicalInspections);
+    }
+    
     @PostMapping("/createNewTechnicalInspection")
     public ResponseEntity<TechnicalInspection> createTechnicalInspection(@RequestBody TechnicalInspection technicalInspection) {
         log.info("Создание ТО. Госномер: {}", technicalInspection.getRegistrationNumber());
         TechnicalInspection savedTechnicalInspection = technicalInspectionService.create(technicalInspection);
         return ResponseEntity.ok(savedTechnicalInspection);
+    }
+    
+    
+    /**
+     * Важно чтобы передавалось поле id
+     * @param technicalInspection
+     * @return
+     */
+    @PostMapping("/updateTechnicalInspection")
+    public ResponseEntity<TechnicalInspection> updateTechnicalInspection(@RequestBody TechnicalInspection technicalInspection) {
+
+    	TechnicalInspection updatedTechnicalInspection = technicalInspectionService.update(technicalInspection);
+        log.info("Обновление ТО. Госномер: {}",
+        		technicalInspection.getRegistrationNumber());
+
+        return ResponseEntity.ok(updatedTechnicalInspection);
     }
 
 }
