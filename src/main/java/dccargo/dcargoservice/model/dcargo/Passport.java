@@ -15,8 +15,8 @@ public class Passport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_pasport")
-    private Integer idPasport;
+    @Column(name = "id_passport")
+    private Integer idPassport;
 
     @Column(name = "series", length = 45)
     private String series;
@@ -35,5 +35,8 @@ public class Passport {
 
     @Column(name = "issued_by", columnDefinition = "TEXT")
     private String issuedBy;
+
+    @Column(name = "block", nullable = false)
+    private Boolean block = false;
 
 }

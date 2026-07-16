@@ -7,6 +7,7 @@ import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,13 +28,40 @@ public class UserService {
 
     }
 
-    public User update(User user){
-        if(!userRepository.existsByIdUser(user.getIdUser())){
-            throw new MainServiceException("Пользователь c ID " + user.getIdUser() + " не обнаружен");
+    /**
+     * Метод обновления пользователя. <br> <b>Важно: проверяет все поля вручную!</b>
+     * @param user
+     * @return
+     */
+    @Transactional
+    public User update(User user) {
+        if (user.getIdUser() == null) {
+            throw new MainServiceException("Отсутствует id в запросе");
         }
 
-        return userRepository.save(user);
+        User dbUser = userRepository.findById(user.getIdUser())
+                .orElseThrow(() -> new MainServiceException("Пользователь c ID " + user.getIdUser() + " не обнаружен"));
 
+        dbUser.setName(user.getName() != null ? user.getName() : dbUser.getName());
+        dbUser.setSurname(user.getSurname() != null ? user.getSurname() : dbUser.getSurname());
+        dbUser.setPatronymic(user.getPatronymic() != null ? user.getPatronymic() : dbUser.getPatronymic());
+        dbUser.setLogin(user.getLogin() != null ? user.getLogin() : dbUser.getLogin());
+        dbUser.setPassword(user.getPassword() != null ? user.getPassword() : dbUser.getPassword());
+        dbUser.setLoginTelephone(user.getLoginTelephone() != null ? user.getLoginTelephone() : dbUser.getLoginTelephone());
+        dbUser.setTelephone(user.getTelephone() != null ? user.getTelephone() : dbUser.getTelephone());
+        dbUser.setEnablet(user.getEnablet() != null ? user.getEnablet() : dbUser.getEnablet());
+        dbUser.setDepartment(user.getDepartment() != null ? user.getDepartment() : dbUser.getDepartment());
+        dbUser.setEmail(user.getEmail() != null ? user.getEmail() : dbUser.getEmail());
+        dbUser.setNumYNP(user.getNumYNP() != null ? user.getNumYNP() : dbUser.getNumYNP());
+        dbUser.setLoyalty(user.getLoyalty() != null ? user.getLoyalty() : dbUser.getLoyalty());
+        dbUser.setStatus(user.getStatus() != null ? user.getStatus() : dbUser.getStatus());
+        dbUser.setBlock(user.getBlock() != null ? user.getBlock() : dbUser.getBlock());
+        dbUser.setIp(user.getIp() != null ? user.getIp() : dbUser.getIp());
+        dbUser.setChatId(user.getChatId() != null ? user.getChatId() : dbUser.getChatId());
+
+        // date_create не обновляем, оставляем оригинальную дату создания
+
+        return userRepository.save(dbUser);
     }
 
 
@@ -68,7 +96,7 @@ public class UserService {
             response.put("message", e.getMessage());
             return response;
         }
-
-
     }
+
+
 }
