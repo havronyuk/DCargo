@@ -79,5 +79,21 @@ public class TruckController {
         TechnicalInspection savedTechnicalInspection = technicalInspectionService.create(technicalInspection);
         return ResponseEntity.ok(savedTechnicalInspection);
     }
+    
+    
+    /**
+     * Важно чтобы передавалось поле id
+     * @param technicalInspection
+     * @return
+     */
+    @PostMapping("/updateTechnicalInspection")
+    public ResponseEntity<TechnicalInspection> updateTechnicalInspection(@RequestBody TechnicalInspection technicalInspection) {
+
+    	TechnicalInspection updatedTechnicalInspection = technicalInspectionService.update(technicalInspection);
+        log.info("Обновление ТО. Госномер: {}",
+        		technicalInspection.getRegistrationNumber());
+
+        return ResponseEntity.ok(updatedTechnicalInspection);
+    }
 
 }
