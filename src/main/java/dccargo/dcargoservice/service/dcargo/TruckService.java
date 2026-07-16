@@ -1,9 +1,13 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class TruckService {
 
     private final TruckRepository truckRepository;
-
-
+    
 
 }
