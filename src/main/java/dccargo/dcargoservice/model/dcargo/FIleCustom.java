@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.model.dcargo;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +31,7 @@ public class FIleCustom {
     private String contentType;
 
     @Lob
-    @Column(name = "data", nullable = false)
+    @Column(name = "data", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] data;
 
     @Column(name = "date_create")
@@ -54,8 +55,8 @@ public class FIleCustom {
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
     
-    @Column(name = "size", columnDefinition = "TEXT")
-    private Double size;
+    @Column(name = "size", precision = 19, scale = 2)
+    private BigDecimal size;
     
     @Column(name = "size_type", columnDefinition = "TEXT")
     private String sizeType;
