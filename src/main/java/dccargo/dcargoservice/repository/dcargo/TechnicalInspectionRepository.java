@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.repository.dcargo;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,6 @@ public interface TechnicalInspectionRepository extends JpaRepository<TechnicalIn
 	
 	boolean existsByDocumentNumber(String documentNumber);
 	 
-	Optional<TechnicalInspection> findAllByTruckIdOrderByInspectionDateDesc (Long id);
+	List<TechnicalInspection> findAllByTruckIdOrderByInspectionDateDesc (Long id);
 
 }

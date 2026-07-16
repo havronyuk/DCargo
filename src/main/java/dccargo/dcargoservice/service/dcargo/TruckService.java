@@ -21,6 +21,10 @@ public class TruckService {
 
     private final TruckRepository truckRepository;
     
+    public List<Truck> getAllTruck() {
+		return truckRepository.findAll();		
+	}
+    
     public Truck create(Truck truck) {
     	if (truckRepository.existsByRegistrationNumber(truck.getRegistrationNumber())) {
             throw new MainServiceException(

@@ -21,6 +21,10 @@ public class TechnicalInspectionService {
 	
 	private final TechnicalInspectionRepository technicalInspectionRepository;
 	
+	public List<TechnicalInspection> getTechnicalInspectionByIdTruck(Long id) {
+		return technicalInspectionRepository.findAllByTruckIdOrderByInspectionDateDesc(id).stream().toList();		
+	}
+	
 	/**
      * Создание технического осмотра.
      */
@@ -198,7 +202,8 @@ public class TechnicalInspectionService {
      */
     public List<TechnicalInspection> getByTruckId(Long truckId) {
         return technicalInspectionRepository
-                .findAllByTruckIdOrderByInspectionDateDesc(truckId).stream().toList();
+                .findAllByTruckIdOrderByInspectionDateDesc(truckId);
+        
     }
 
 }
