@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.enums.TruckStatus;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import dccargo.dcargoservice.service.dcargo.exception.TruckException;
@@ -62,6 +63,7 @@ public class TruckService {
         }
     	
     	truck.setCreatedAt(LocalDateTime.now());  
+    	truck.setStatus(TruckStatus.INACTIVE);  
     	//потом добавить userCreate
     	return truckRepository.save(truck);
 	}
