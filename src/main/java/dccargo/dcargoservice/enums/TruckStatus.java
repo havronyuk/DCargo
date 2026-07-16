@@ -8,7 +8,7 @@ public enum TruckStatus {
     ACTIVE,
 
     /**
-     * Находится в ремонте.
+     * Находится в ремонте. 
      */
     REPAIR,
 

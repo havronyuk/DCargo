@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import dccargo.dcargoservice.service.dcargo.exception.TruckException;
+import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 
 /**
  * Глобальный обработчик ошибок. Экранирует 500 ошибки
@@ -16,9 +16,9 @@ import dccargo.dcargoservice.service.dcargo.exception.TruckException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	
-	@ExceptionHandler(TruckException.class) // указываем какой класс ошибок отлавливаем
+	@ExceptionHandler(MainServiceException.class) // указываем какой класс ошибок отлавливаем
     public ResponseEntity<Map<String, Object>> handleDuplicateTruck(
-            TruckException exception) {
+            MainServiceException exception) {
 
         Map<String, Object> response = Map.of(
                 "status", HttpStatus.CONFLICT.value(),

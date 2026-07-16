@@ -4,7 +4,7 @@ package dccargo.dcargoservice.service.dcargo;
 import dccargo.dcargoservice.enums.TruckStatus;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
-import dccargo.dcargoservice.service.dcargo.exception.TruckException;
+import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class TruckService {
     
     public Truck create(Truck truck) {
     	if (truckRepository.existsByRegistrationNumber(truck.getRegistrationNumber())) {
-            throw new TruckException(
+            throw new MainServiceException(
                     "Автомобиль с госномером "
                             + truck.getRegistrationNumber()
                             + " уже существует"
@@ -31,7 +31,7 @@ public class TruckService {
         }
     	
     	if (truckRepository.existsByInternalId(truck.getInternalId())) {
-            throw new TruckException(
+            throw new MainServiceException(
                     "Автомобиль с внутренним id "
                             + truck.getInternalId()
                             + " уже существует"
@@ -39,7 +39,7 @@ public class TruckService {
         }
     	
     	if (truckRepository.existsByInternalNumber(truck.getInternalNumber())) {
-            throw new TruckException(
+            throw new MainServiceException(
                     "Автомобиль с внутренним номером "
                             + truck.getInternalNumber()
                             + " уже существует"
@@ -47,7 +47,7 @@ public class TruckService {
         }
     	
     	if (truckRepository.existsByGarageNumber(truck.getGarageNumber())) {
-    		throw new TruckException(
+    		throw new MainServiceException(
     				"Автомобиль с гаражным номером "
     						+ truck.getGarageNumber()
     						+ " уже существует"
@@ -55,7 +55,7 @@ public class TruckService {
     	}
     	
     	if (truck.getVin() != null && truckRepository.existsByVin(truck.getVin())) {
-            throw new TruckException(
+            throw new MainServiceException(
                     "Автомобиль с VIN "
                             + truck.getVin()
                             + " уже существует"
@@ -76,11 +76,11 @@ public class TruckService {
     @Transactional
     public Truck update(Truck truck) {
     	if(truck.getId() == null ) {
-    		throw new TruckException("Отсутствует id в запросе");
+    		throw new MainServiceException("Отсутствует id в запросе");
     	}
 
         Truck dbTruck = truckRepository.findById(truck.getId())
-                .orElseThrow(() -> new TruckException("Транспортное средство не найдено"));
+                .orElseThrow(() -> new MainServiceException("Транспортное средство не найдено"));
 
         dbTruck.setInternalId(truck.getInternalId() != null ? truck.getInternalId() : dbTruck.getInternalId());
         dbTruck.setInternalNumber(truck.getInternalNumber() != null ? truck.getInternalNumber() : dbTruck.getInternalNumber());
