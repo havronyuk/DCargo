@@ -3,7 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.repository.dcargo.UserRepository;
-import dccargo.dcargoservice.service.dcargo.exception.TruckException;
+import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class UserService {
 
     public User createUser(User user){
         if(userRepository.existsByLoginTelephoneAndBlockIsFalse(user.getLoginTelephone())){
-            throw new TruckException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
+            throw new MainServiceException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
         }
 
         return userRepository.save(user);
@@ -29,7 +29,7 @@ public class UserService {
 
     public User update(User user){
         if(!userRepository.existsByIdUser(user.getIdUser())){
-            throw new TruckException("Пользователь c ID " + user.getIdUser() + " не обнаружен");
+            throw new MainServiceException("Пользователь c ID " + user.getIdUser() + " не обнаружен");
         }
 
         return userRepository.save(user);
