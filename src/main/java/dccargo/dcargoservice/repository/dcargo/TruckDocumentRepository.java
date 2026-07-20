@@ -6,13 +6,13 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import dccargo.dcargoservice.model.dcargo.TechnicalInspection;
+import dccargo.dcargoservice.model.dcargo.TruckDocument;
 
 @Repository
-public interface TechnicalInspectionRepository extends JpaRepository<TechnicalInspection, Long>{
+public interface TruckDocumentRepository extends JpaRepository<TruckDocument, Long>{
 	
 	boolean existsByDocumentNumber(String documentNumber);
 	 
-	List<TechnicalInspection> findAllByTruckIdOrderByInspectionDateDesc (Long id);
+	List<TruckDocument> findAllByTruckIdOrderByInspectionDateDesc (Long id);
 
 }
