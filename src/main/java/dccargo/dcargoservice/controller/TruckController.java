@@ -1,9 +1,12 @@
 package dccargo.dcargoservice.controller;
 
 
-import dccargo.dcargoservice.model.dcargo.TechnicalInspection;
+import dccargo.dcargoservice.model.dcargo.DocumentType;
+import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.Truck;
-import dccargo.dcargoservice.service.dcargo.TechnicalInspectionService;
+import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
+import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
+import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +27,15 @@ public class TruckController {
 
     private final TruckService truckService;
     
-    private final TechnicalInspectionService technicalInspectionService;
+    private final TruckDocumentService truckDocumentService;
+ 
+    private final DocumentTypeService documentTypeService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
         return ResponseEntity.ok("echo");
     }
-    
+        
     @GetMapping("/getAllTruck")
     public ResponseEntity<List<Truck>> getAllTruck() {
     	List<Truck> trucks = truckService.getAllTruck();
@@ -67,33 +72,50 @@ public class TruckController {
     }
     
     
-    @GetMapping("/getTechnicalInspection/{id}")
-    public ResponseEntity<List<TechnicalInspection>> getTechnicalInspection(@PathVariable Long id) {
-    	List<TechnicalInspection> technicalInspections = technicalInspectionService.getByTruckId(id);
-        return ResponseEntity.ok(technicalInspections);
+    /**
+     * Отдаёт все документа по id машины
+     * @param id
+     * @return
+     */
+    @GetMapping("/getTruckDocument/{id}")
+    public ResponseEntity<List<TruckDocument>> getTruckDocument(@PathVariable Long id) {
+    	List<TruckDocument> truckDocument = truckDocumentService.getByTruckId(id);
+        return ResponseEntity.ok(truckDocument);
     }
     
-    @PostMapping("/createNewTechnicalInspection")
-    public ResponseEntity<TechnicalInspection> createTechnicalInspection(@RequestBody TechnicalInspection technicalInspection) {
-        log.info("Создание ТО. Госномер: {}", technicalInspection.getRegistrationNumber());
-        TechnicalInspection savedTechnicalInspection = technicalInspectionService.create(technicalInspection);
+    @PostMapping("/createNewTruckDocument")
+    public ResponseEntity<TruckDocument> createTruckDocument(@RequestBody TruckDocument truckDocument) {
+        log.info("Создание Документа. Госномер: {}", truckDocument.getRegistrationNumber());
+        TruckDocument savedTechnicalInspection = truckDocumentService.create(truckDocument);
         return ResponseEntity.ok(savedTechnicalInspection);
     }
     
     
     /**
      * Важно чтобы передавалось поле id
-     * @param technicalInspection
+     * @param truckDocument
      * @return
      */
-    @PostMapping("/updateTechnicalInspection")
-    public ResponseEntity<TechnicalInspection> updateTechnicalInspection(@RequestBody TechnicalInspection technicalInspection) {
+    @PostMapping("/updateTruckDocument")
+    public ResponseEntity<TruckDocument> updateTruckDocument(@RequestBody TruckDocument truckDocument) {
 
-    	TechnicalInspection updatedTechnicalInspection = technicalInspectionService.update(technicalInspection);
-        log.info("Обновление ТО. Госномер: {}",
-        		technicalInspection.getRegistrationNumber());
+    	TruckDocument updatedTechnicalInspection = truckDocumentService.update(truckDocument);
+        log.info("Обновление Документа. Госномер: {}",
+        		truckDocument.getRegistrationNumber());
 
         return ResponseEntity.ok(updatedTechnicalInspection);
+    }
+    
+    @GetMapping("/getAllDocumentType")
+    public ResponseEntity<List<DocumentType>> getAllDocumentType() {    	
+        return ResponseEntity.ok(documentTypeService.getAll());
+    }
+    
+    @PostMapping("/createDocumentType")
+    public ResponseEntity<DocumentType> createDocumentType (@RequestBody DocumentType documentType) {
+        log.info("Создание Типа документа.");
+        DocumentType savedDocumentType = documentTypeService.create(documentType);
+        return ResponseEntity.ok(savedDocumentType);
     }
 
 }

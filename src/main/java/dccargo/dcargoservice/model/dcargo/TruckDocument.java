@@ -18,8 +18,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "technical_inspection")
-public class TechnicalInspection {
+@Table(name = "truck_document")
+public class TruckDocument {
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -96,4 +96,17 @@ public class TechnicalInspection {
      */
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+    
+    /**
+     * ID типа документа из справочника document_type.
+     */
+    @Column(name = "document_type_id", nullable = false)
+    private Long documentTypeId;
+
+    /**
+     * Название типа документа.
+     * Например: Техосмотр, ОСАГО, КАСКО.
+     */
+    @Column(name = "document_type_name", nullable = false, length = 100)
+    private String documentTypeName;
 }
