@@ -49,7 +49,7 @@ public class AppConfig {
     @Value("${usrnmDCargo}")
     public String usrnmDCargo;
 
-    @Value("{passwordDCargo}")
+    @Value("${passwordDCargo}")
     public String passwordDCargo;
 
     @Value("${dbIpSourceDCargo}")

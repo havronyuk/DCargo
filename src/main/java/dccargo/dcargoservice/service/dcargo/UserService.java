@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -96,6 +97,11 @@ public class UserService {
             response.put("message", e.getMessage());
             return response;
         }
+    }
+
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
 
