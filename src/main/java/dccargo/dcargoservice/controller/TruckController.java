@@ -2,10 +2,12 @@ package dccargo.dcargoservice.controller;
 
 
 import dccargo.dcargoservice.model.dcargo.DocumentType;
+import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
+import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,8 @@ public class TruckController {
     private final TruckDocumentService truckDocumentService;
  
     private final DocumentTypeService documentTypeService;
+    
+    private final EquipmentTypeService equipmentTypeService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
@@ -117,5 +121,24 @@ public class TruckController {
         DocumentType savedDocumentType = documentTypeService.create(documentType);
         return ResponseEntity.ok(savedDocumentType);
     }
+    
+    @GetMapping("/getAllEquipmentType")
+    public ResponseEntity<List<EquipmentType>> getAllEquipmentType() {
+        return ResponseEntity.ok(equipmentTypeService.getAll());
+    }
+
+    @PostMapping("/createEquipmentType")
+    public ResponseEntity<EquipmentType> createEquipmentType(
+            @RequestBody EquipmentType equipmentType) {
+
+        log.info("Создание типа оборудования.");
+
+        EquipmentType savedEquipmentType =
+                equipmentTypeService.create(equipmentType);
+
+        return ResponseEntity.ok(savedEquipmentType);
+    }
+    
+    
 
 }
