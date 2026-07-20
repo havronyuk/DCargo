@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,13 +23,17 @@ public class UserController {
     private final UserService userService;
 
 
-//    @GetMapping("/getUser")
-//    public ResponseEntity<?> getPointsForDistribution(@RequestParam  shipmentDate,
-//                                                      @RequestParam String typeSklad){
-//
+//    @GetMapping("/getUserById")
+//    public ResponseEntity<User> getUserById(@RequestParam Integer idUser){
+////        User user = userService.getUserById()
 //    }
 
-//    @GetMapping("/getUsers")
+    @GetMapping("/getUsers")
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
 
     @PostMapping("/createUser")
     public ResponseEntity<User> create(@RequestBody User user) {
