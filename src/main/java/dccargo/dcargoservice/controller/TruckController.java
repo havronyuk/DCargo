@@ -1,8 +1,11 @@
 package dccargo.dcargoservice.controller;
 
 
+import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.TechnicalInspection;
 import dccargo.dcargoservice.model.dcargo.Truck;
+import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
+import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
 import dccargo.dcargoservice.service.dcargo.TechnicalInspectionService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +28,14 @@ public class TruckController {
     private final TruckService truckService;
     
     private final TechnicalInspectionService technicalInspectionService;
+ 
+    private final DocumentTypeService documentTypeService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
         return ResponseEntity.ok("echo");
     }
-    
+        
     @GetMapping("/getAllTruck")
     public ResponseEntity<List<Truck>> getAllTruck() {
     	List<Truck> trucks = truckService.getAllTruck();
@@ -94,6 +99,18 @@ public class TruckController {
         		technicalInspection.getRegistrationNumber());
 
         return ResponseEntity.ok(updatedTechnicalInspection);
+    }
+    
+    @GetMapping("/getAllDocumentType")
+    public ResponseEntity<List<DocumentType>> getAllDocumentType() {    	
+        return ResponseEntity.ok(documentTypeService.getAll());
+    }
+    
+    @PostMapping("/createDocumentType")
+    public ResponseEntity<DocumentType> createDocumentType (@RequestBody DocumentType documentType) {
+        log.info("Создание Типа документа.");
+        DocumentType savedDocumentType = documentTypeService.create(documentType);
+        return ResponseEntity.ok(savedDocumentType);
     }
 
 }
