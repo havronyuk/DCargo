@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,8 +23,19 @@ public class DriverCardService {
 
     public DriverCard create(DriverCard driverCard) {
 
+
         if(driverCard.getIdDriverCard() != null){
             throw new MainServiceException("Нельзя создать запись, если ID уже существует");
+        }
+
+        if(driverCard.getIdUser() == null){
+            throw new MainServiceException("Нельзя создать запись без привязки к пользователю");
+        }
+
+        boolean existActual = driverCardRepository.existsByIdUserAndBlock(driverCard.getIdUser(),false);
+
+        if(existActual){
+            throw new MainServiceException("Создание новой записи запрещено. Заблокируйте актуальную запись");
         }
 
         if(driverCardRepository.existsByNumber(driverCard.getNumber())){
@@ -46,6 +58,10 @@ public class DriverCardService {
 
         DriverCard dbDriverCard = driverCardRepository.findById(driverCard.getIdDriverCard())
                 .orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID " + driverCard.getIdDriverCard() + " не обнаружено"));
+
+        if(dbDriverCard.getIdUser() != driverCard.getIdUser()){
+            throw new MainServiceException("Нельзя передать удостоверение на другого пользователя");
+        }
 
         dbDriverCard.setNumber(driverCard.getNumber() != null ? driverCard.getNumber() : dbDriverCard.getNumber());
         dbDriverCard.setIssueDate(driverCard.getIssueDate() != null ? driverCard.getIssueDate() : dbDriverCard.getIssueDate());
@@ -88,5 +104,19 @@ public class DriverCardService {
             response.put("message", e.getMessage());
             return response;
         }
+    }
+
+    public DriverCard getDriverCardById(Integer idDriverCard) {
+        return driverCardRepository.findByIdDriverCard(idDriverCard);
+    }
+
+
+    public DriverCard getActualDriverCardByIdUser(Integer idUser) {
+        return driverCardRepository.findByIdUserAndBlock(idUser,false);
+    }
+
+    public List<DriverCard> getDriverCardsByIdUser(Integer idUser) {
+        return driverCardRepository.findAllByIdUser(idUser);
+
     }
 }

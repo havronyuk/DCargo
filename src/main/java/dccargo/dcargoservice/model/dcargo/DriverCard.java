@@ -17,6 +17,9 @@ public class DriverCard {
     @Column(name = "id_driver_card")
     private Integer idDriverCard;
 
+    @Column(name = "id_user")
+    private Integer idUser;
+
     @Column(name = "number", length = 255)
     private String number;
 
