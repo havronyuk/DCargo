@@ -1,18 +1,17 @@
 package dccargo.dcargoservice.controller;
 
 
+import dccargo.dcargoservice.model.dcargo.DriverCard;
 import dccargo.dcargoservice.model.dcargo.Passport;
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.service.dcargo.PassportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +20,26 @@ import java.util.Map;
 public class PassportController {
 
     private final PassportService passportService;
+
+    @GetMapping("/getPassportById")
+    public ResponseEntity<Passport> getPassportById(@RequestParam Integer idPassport){
+        Passport passport = passportService.getPassportById(idPassport);
+        return ResponseEntity.ok(passport);
+    }
+
+    @GetMapping("/getActualPassportByIdUser")
+    public ResponseEntity<Passport> getActualPassportByIdUser(@RequestParam Integer idUser){
+        Passport passport = passportService.getActualPassportByIdUser(idUser);
+        return ResponseEntity.ok(passport);
+    }
+
+    @GetMapping("/getPassportsByIdUser")
+    public ResponseEntity<List<Passport>> getPassportsByIdUser(@RequestParam Integer idUser){
+        List<Passport> allPassports = passportService.getPassportsByIdUser(idUser);
+        return ResponseEntity.ok(allPassports);
+    }
+
+
 
     @PostMapping("/createPassport")
     public ResponseEntity<Passport> create(@RequestBody Passport passport) {

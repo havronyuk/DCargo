@@ -18,6 +18,9 @@ public class Passport {
     @Column(name = "id_passport")
     private Integer idPassport;
 
+    @Column(name = "id_user")
+    private Integer idUser;
+
     @Column(name = "series", length = 45)
     private String series;
 
