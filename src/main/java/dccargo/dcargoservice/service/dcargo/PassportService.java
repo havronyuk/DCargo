@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -23,6 +24,16 @@ public class PassportService {
 
         if(passport.getIdPassport() != null){
             throw new MainServiceException("Нельзя создать запись, если ID уже существует");
+        }
+
+        if(passport.getIdUser() == null){
+            throw new MainServiceException("Нельзя создать запись без привязки к пользователю");
+        }
+
+        boolean existActual = passportRepository.existsByIdUserAndBlock(passport.getIdUser(),false);
+
+        if(existActual){
+            throw new MainServiceException("Создание новой записи запрещено. Заблокируйте актуальную запись");
         }
 
         if(passportRepository.existsByPersonalNumber(passport.getPersonalNumber())){
@@ -47,6 +58,10 @@ public class PassportService {
 
         Passport dbPassport = passportRepository.findById(passport.getIdPassport())
                 .orElseThrow(() -> new MainServiceException("Паспорт c ID " + passport.getIdPassport() + " не обнаружен"));
+
+        if(dbPassport.getIdUser() != passport.getIdUser()){
+            throw new MainServiceException("Нельзя передать паспорт другому пользователя");
+        }
 
         dbPassport.setSeries(passport.getSeries() != null ? passport.getSeries() : dbPassport.getSeries());
         dbPassport.setNumber(passport.getNumber() != null ? passport.getNumber() : dbPassport.getNumber());
@@ -98,5 +113,17 @@ public class PassportService {
     }
 
 
+    public Passport getPassportById(Integer idPassport) {
+        return passportRepository.findByIdPassport(idPassport);
+    }
 
+
+    public Passport getActualPassportByIdUser(Integer idUser) {
+        return passportRepository.findByIdUserAndBlock(idUser,false);
+    }
+
+    public List<Passport> getPassportsByIdUser(Integer idUser) {
+        return passportRepository.findAllByIdUser(idUser);
+
+    }
 }

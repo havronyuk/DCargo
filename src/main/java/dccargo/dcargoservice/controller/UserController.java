@@ -23,10 +23,11 @@ public class UserController {
     private final UserService userService;
 
 
-//    @GetMapping("/getUserById")
-//    public ResponseEntity<User> getUserById(@RequestParam Integer idUser){
-////        User user = userService.getUserById()
-//    }
+    @GetMapping("/getUserById")
+    public ResponseEntity<User> getUserById(@RequestParam Integer idUser){
+        User user = userService.getUserById(idUser);
+        return ResponseEntity.ok(user);
+    }
 
     @GetMapping("/getUsers")
     public ResponseEntity<List<User>> getAllUsers() {

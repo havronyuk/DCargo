@@ -3,16 +3,15 @@ package dccargo.dcargoservice.controller;
 
 import dccargo.dcargoservice.model.dcargo.DriverCard;
 import dccargo.dcargoservice.model.dcargo.Passport;
+import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.service.dcargo.DriverCardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +20,25 @@ import java.util.Map;
 public class DriverCardController {
 
     private final DriverCardService driverCardService;
+
+    @GetMapping("/getDriverCardById")
+    public ResponseEntity<DriverCard> getDriverCardById(@RequestParam Integer idDriverCard){
+        DriverCard driverCard = driverCardService.getDriverCardById(idDriverCard);
+        return ResponseEntity.ok(driverCard);
+    }
+
+    @GetMapping("/getActualDriverCardByIdUser")
+    public ResponseEntity<DriverCard> getActualDriverCardByIdUser(@RequestParam Integer idUser){
+        DriverCard driverCard = driverCardService.getActualDriverCardByIdUser(idUser);
+        return ResponseEntity.ok(driverCard);
+    }
+
+    @GetMapping("/getDriverCardsByIdUser")
+    public ResponseEntity<List<DriverCard>> getDriverCardsByIdUser(@RequestParam Integer idUser){
+        List<DriverCard> allCards = driverCardService.getDriverCardsByIdUser(idUser);
+        return ResponseEntity.ok(allCards);
+    }
+
 
     @PostMapping("/createDriverCard")
     public ResponseEntity<DriverCard> create(@RequestBody DriverCard driverCard) {
