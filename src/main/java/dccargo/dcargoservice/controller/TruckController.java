@@ -2,11 +2,15 @@ package dccargo.dcargoservice.controller;
 
 
 import dccargo.dcargoservice.model.dcargo.DocumentType;
+import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
+import dccargo.dcargoservice.model.dcargo.TruckEquipment;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
+import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
+import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +34,10 @@ public class TruckController {
     private final TruckDocumentService truckDocumentService;
  
     private final DocumentTypeService documentTypeService;
+    
+    private final EquipmentTypeService equipmentTypeService;
+    
+    private final TruckEquipmentService truckEquipmentService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
@@ -116,6 +124,86 @@ public class TruckController {
         log.info("Создание Типа документа.");
         DocumentType savedDocumentType = documentTypeService.create(documentType);
         return ResponseEntity.ok(savedDocumentType);
+    }
+    
+    @GetMapping("/getAllEquipmentType")
+    public ResponseEntity<List<EquipmentType>> getAllEquipmentType() {
+        return ResponseEntity.ok(equipmentTypeService.getAll());
+    }
+
+    @PostMapping("/createEquipmentType")
+    public ResponseEntity<EquipmentType> createEquipmentType(
+            @RequestBody EquipmentType equipmentType) {
+
+        log.info("Создание типа оборудования.");
+
+        EquipmentType savedEquipmentType =
+                equipmentTypeService.create(equipmentType);
+
+        return ResponseEntity.ok(savedEquipmentType);
+    }
+    
+    /**
+     * Отдаёт всё оборудование по ID машины.
+     *
+     * @param id ID транспортного средства
+     * @return оборудование транспортного средства
+     */
+    @GetMapping("/getTruckEquipment/{id}")
+    public ResponseEntity<List<TruckEquipment>> getTruckEquipment(
+            @PathVariable Long id) {
+
+        List<TruckEquipment> truckEquipment =
+                truckEquipmentService.getByTruckId(id);
+
+        return ResponseEntity.ok(truckEquipment);
+    }
+
+
+    /**
+     * Создание оборудования транспортного средства.
+     *
+     * @param truckEquipment оборудование
+     * @return сохранённое оборудование
+     */
+    @PostMapping("/createNewTruckEquipment")
+    public ResponseEntity<TruckEquipment> createTruckEquipment(
+            @RequestBody TruckEquipment truckEquipment) {
+
+        log.info(
+                "Создание оборудования. Госномер: {}, тип оборудования: {}",
+                truckEquipment.getRegistrationNumber(),
+                truckEquipment.getEquipmentTypeId()
+        );
+
+        TruckEquipment savedTruckEquipment =
+                truckEquipmentService.create(truckEquipment);
+
+        return ResponseEntity.ok(savedTruckEquipment);
+    }
+
+
+    /**
+     * Обновление оборудования транспортного средства.
+     * Важно, чтобы передавалось поле id.
+     *
+     * @param truckEquipment оборудование
+     * @return обновлённое оборудование
+     */
+    @PostMapping("/updateTruckEquipment")
+    public ResponseEntity<TruckEquipment> updateTruckEquipment(
+            @RequestBody TruckEquipment truckEquipment) {
+
+        TruckEquipment updatedTruckEquipment =
+                truckEquipmentService.update(truckEquipment);
+
+        log.info(
+                "Обновление оборудования. ID: {}, Госномер: {}",
+                truckEquipment.getId(),
+                truckEquipment.getRegistrationNumber()
+        );
+
+        return ResponseEntity.ok(updatedTruckEquipment);
     }
 
 }
