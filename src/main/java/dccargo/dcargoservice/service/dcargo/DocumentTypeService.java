@@ -11,6 +11,10 @@ import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Объект типов документов
+ * типы можно только создавать, удалять нельзя
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor  // генерирует конструктор для всех final полей

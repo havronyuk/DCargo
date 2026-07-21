@@ -95,6 +95,8 @@ public class TruckDocumentService {
 
         truckDocument.setCreatedAt(LocalDateTime.now());
         truckDocument.setStatus(TechnicalInspectionStatus.ACTIVE);
+        
+        //TODO добавить юзера и фиксацию объекта пробега
 
         return truckDocumentRepository.save(truckDocument);
     }

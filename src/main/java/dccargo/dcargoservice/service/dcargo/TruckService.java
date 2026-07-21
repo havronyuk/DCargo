@@ -68,7 +68,7 @@ public class TruckService {
     	
     	truck.setCreatedAt(LocalDateTime.now());  
     	truck.setStatus(TruckStatus.INACTIVE);  
-    	//потом добавить userCreate
+    	//TODO потом добавить userCreate
     	return truckRepository.save(truck);
 	}
     

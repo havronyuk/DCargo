@@ -5,6 +5,7 @@ import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.TruckEquipment;
+import dccargo.dcargoservice.model.dcargo.TruckTire;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
@@ -12,6 +13,7 @@ import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
+import dccargo.dcargoservice.service.dcargo.TruckTireService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +40,8 @@ public class TruckController {
     private final EquipmentTypeService equipmentTypeService;
     
     private final TruckEquipmentService truckEquipmentService;
+    
+    private final TruckTireService truckTireService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
@@ -204,6 +208,44 @@ public class TruckController {
         );
 
         return ResponseEntity.ok(updatedTruckEquipment);
+    }
+    
+    /*
+     * =============КОЛЁСА=================
+     */
+    /**
+     * Получить все шины
+     */
+    @GetMapping("/getAllTruckTire")
+    public List<TruckTire> getAllTruckTire() {
+        return truckTireService.getAllTruckTire();
+    }
+    
+    /**
+     * Получить шины транспортного средства
+     */
+    @GetMapping("/getTruckTire/{truckId}")
+    public List<TruckTire> getTruckTire(@PathVariable Long truckId) {
+
+        return truckTireService.getByTruckId(truckId);
+    }
+    
+    /**
+     * Создать новую шину
+     */
+    @PostMapping("/createNewTruckTire")
+    public TruckTire createNewTruckTire(@RequestBody TruckTire truckTire) {
+
+        return truckTireService.create(truckTire);
+    }
+    
+    /**
+     * Обновить данные шины
+     */
+    @PostMapping("/updateTruckTire")
+    public TruckTire updateTruckTire(@RequestBody TruckTire truckTire) {
+
+        return truckTireService.update(truckTire);
     }
 
 }

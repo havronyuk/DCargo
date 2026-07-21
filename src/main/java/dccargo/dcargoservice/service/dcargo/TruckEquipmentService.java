@@ -88,6 +88,7 @@ public class TruckEquipmentService {
         truckEquipment.setStatus(TruckEquipmentStatus.ACTIVE);
         
         // TODO дальше добавить подтягивание mileageStartId и  mileageStartValue и 
+      //TODO добавить юзера и фиксацию объекта пробега
 
         return truckEquipmentRepository.save(truckEquipment);
     }

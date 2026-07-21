@@ -41,6 +41,8 @@ public class DriverCardService {
         if(driverCardRepository.existsByNumber(driverCard.getNumber())){
             throw new MainServiceException("Водительское удостоверение с данным номером уже существует");
         }
+        
+        //TODO Лёша, добавь потом добавление кто создал этот объект 
 
         return driverCardRepository.save(driverCard);
     }
