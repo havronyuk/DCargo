@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.controller;
 
 
+import dccargo.dcargoservice.dto.dcargo.TruckDTO;
 import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
@@ -11,6 +12,7 @@ import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
 import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
+import dccargo.dcargoservice.service.dcargo.TruckDTOService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
 import dccargo.dcargoservice.service.dcargo.TruckMileageService;
@@ -47,15 +49,46 @@ public class TruckController {
     
     private final TruckMileageService truckMileageService;
     
+    private final TruckDTOService truckDTOService;
+    
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
         return ResponseEntity.ok("echo");
     }
-        
+    
+    
+    /**
+     * Получить все машины без связей
+     * @return
+     */
     @GetMapping("/getAllTruck")
     public ResponseEntity<List<Truck>> getAllTruck() {
     	List<Truck> trucks = truckService.getAllTruck();
         return ResponseEntity.ok(trucks);
+    }
+    
+    /**
+     * Получить одну машину со всеми данными.
+     * отдаёт связи у которых статус ACTIVE или утсановлено, если колёса
+     */
+    @GetMapping("/getTruck/{truckId}/full")
+    public ResponseEntity<TruckDTO> getById(
+            @PathVariable Long truckId
+    ) {
+        return ResponseEntity.ok(
+                truckDTOService.getById(truckId)
+        );
+    }
+
+    /**
+     * Получить все машины со всеми данными.
+     * отдаёт связи у которых статус ACTIVE или утсановлено, если колёса
+     */
+    @GetMapping("/getAllTruck/full")
+    public ResponseEntity<List<TruckDTO>> getAll() {
+        return ResponseEntity.ok(
+                truckDTOService.getAll()
+        );
     }
     
     /**

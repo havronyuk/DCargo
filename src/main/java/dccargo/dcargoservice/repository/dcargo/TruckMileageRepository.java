@@ -1,8 +1,10 @@
 package dccargo.dcargoservice.repository.dcargo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -30,6 +32,15 @@ public interface TruckMileageRepository extends JpaRepository<TruckMileage, Long
     boolean existsByTruckIdAndMileage(
             Long truckId,
             Integer mileage
+    );
+    
+    List<TruckMileage> findByTruckIdOrderByMileageDateDesc(
+            Long truckId,
+            Pageable pageable
+    );
+
+    List<TruckMileage> findAllByTruckIdIn(
+            Collection<Long> truckIds
     );
 
 }
