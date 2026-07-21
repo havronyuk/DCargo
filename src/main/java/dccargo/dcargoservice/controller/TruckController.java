@@ -5,6 +5,7 @@ import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.TruckEquipment;
+import dccargo.dcargoservice.model.dcargo.TruckMileage;
 import dccargo.dcargoservice.model.dcargo.TruckTire;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
@@ -12,6 +13,7 @@ import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
 import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
+import dccargo.dcargoservice.service.dcargo.TruckMileageService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import dccargo.dcargoservice.service.dcargo.TruckTireService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,8 @@ public class TruckController {
     private final TruckEquipmentService truckEquipmentService;
     
     private final TruckTireService truckTireService;
+    
+    private final TruckMileageService truckMileageService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
@@ -247,5 +251,48 @@ public class TruckController {
 
         return truckTireService.update(truckTire);
     }
+    
+    /*
+     * =============ПРОБЕГ=================
+     */
 
+    /**
+     * Получить все записи пробега.
+     */
+    @GetMapping("/getAllTruckMileage")
+    public List<TruckMileage> getAllTruckMileage() {
+    	//TODO потом отключить
+        return truckMileageService.getAllTruckMileage();
+    }
+
+    /**
+     * Получить всю историю пробега автомобиля.
+     */
+    @GetMapping("/getTruckMileage/{truckId}")
+    public List<TruckMileage> getTruckMileage(
+            @PathVariable Long truckId) {
+
+        return truckMileageService.getByTruckId(truckId);
+    }
+
+    /**
+     * Получить последний зафиксированный пробег автомобиля.
+     */
+    @GetMapping("/getLastTruckMileage/{truckId}")
+    public TruckMileage getLastTruckMileage(
+            @PathVariable Long truckId) {
+
+        return truckMileageService.getLastMileage(truckId);
+    }
+
+    /**
+     * Создать новую запись пробега.
+     */
+    @PostMapping("/createNewTruckMileage")
+    public TruckMileage createNewTruckMileage(
+            @RequestBody TruckMileage truckMileage) {
+
+        return truckMileageService.create(truckMileage);
+    }
+    
 }
