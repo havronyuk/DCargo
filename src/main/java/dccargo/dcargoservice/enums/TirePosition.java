@@ -8,7 +8,8 @@ public enum TirePosition {
     INNER_RIGHT("Внутреннее правое"),
     OUTER_LEFT("Наружное левое"),
     OUTER_RIGHT("Наружное правое"),
-    SINGLE("Одиночное");
+    SINGLE("Одиночное"),
+	SPARE("Запасное");
 
     private final String description;
 
