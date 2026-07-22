@@ -6,18 +6,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface DriverCardRepository  extends JpaRepository<DriverCard, Integer> {
+public interface DriverCardRepository  extends JpaRepository<DriverCard, Long> {
 
-    DriverCard findByIdDriverCard(Integer idDriverCard);
+    Optional<DriverCard> findByIdDriverCard(Long idDriverCard);
 
-    DriverCard findByIdUserAndBlock(Integer idUser, Boolean block);
+    Optional<DriverCard> findByIdUserAndBlock(Long idUser, Boolean block);
 
     boolean existsByNumber(String number);
 
-    boolean existsByIdUserAndBlock(Integer idUser, Boolean block);
+    boolean existsByIdUserAndBlock(Long idUser, Boolean block);
 
-    List<DriverCard> findAllByIdUser(Integer idUser);
+    List<DriverCard> findAllByIdUser(Long idUser);
 
 }

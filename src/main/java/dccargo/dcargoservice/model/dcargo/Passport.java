@@ -16,10 +16,10 @@ public class Passport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_passport")
-    private Integer idPassport;
+    private Long idPassport;
 
     @Column(name = "id_user")
-    private Integer idUser;
+    private Long idUser;
 
     @Column(name = "series", length = 45)
     private String series;

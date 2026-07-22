@@ -58,7 +58,7 @@ public class DriverCardService {
             throw new MainServiceException("Отсутствует id в запросе");
         }
 
-        DriverCard dbDriverCard = driverCardRepository.findById(driverCard.getIdDriverCard())
+        DriverCard dbDriverCard = driverCardRepository.findByIdDriverCard(driverCard.getIdDriverCard())
                 .orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID " + driverCard.getIdDriverCard() + " не обнаружено"));
 
         if(dbDriverCard.getIdUser() != driverCard.getIdUser()){
@@ -75,7 +75,7 @@ public class DriverCardService {
         return driverCardRepository.save(dbDriverCard);
     }
 
-    public Map<String, Object> deactivateDriverCard(Integer idDriverCard) {
+    public Map<String, Object> deactivateDriverCard(Long idDriverCard) {
         Map<String,Object> response = new HashMap<>();
         try{
             if(idDriverCard == null){
@@ -84,7 +84,7 @@ public class DriverCardService {
                 return response;
             }
 
-            DriverCard driverCard = driverCardRepository.findByIdDriverCard(idDriverCard);
+            DriverCard driverCard = driverCardRepository.findByIdDriverCard(idDriverCard).orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID " + idDriverCard + " не обнаружено"));
 
             if(driverCard == null){
                 response.put("status",100);
@@ -108,16 +108,16 @@ public class DriverCardService {
         }
     }
 
-    public DriverCard getDriverCardById(Integer idDriverCard) {
-        return driverCardRepository.findByIdDriverCard(idDriverCard);
+    public DriverCard getDriverCardById(Long idDriverCard) {
+        return driverCardRepository.findByIdDriverCard(idDriverCard).orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID " + idDriverCard + " не обнаружено"));
     }
 
 
-    public DriverCard getActualDriverCardByIdUser(Integer idUser) {
-        return driverCardRepository.findByIdUserAndBlock(idUser,false);
+    public DriverCard getActualDriverCardByIdUser(Long idUser) {
+        return driverCardRepository.findByIdUserAndBlock(idUser,false).orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID User" + idUser + " не обнаружено"));
     }
 
-    public List<DriverCard> getDriverCardsByIdUser(Integer idUser) {
+    public List<DriverCard> getDriverCardsByIdUser(Long idUser) {
         return driverCardRepository.findAllByIdUser(idUser);
 
     }

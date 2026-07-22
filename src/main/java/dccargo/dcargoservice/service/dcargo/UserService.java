@@ -40,7 +40,7 @@ public class UserService {
             throw new MainServiceException("Отсутствует id в запросе");
         }
 
-        User dbUser = userRepository.findById(user.getIdUser())
+        User dbUser = userRepository.findByIdUser(user.getIdUser())
                 .orElseThrow(() -> new MainServiceException("Пользователь c ID " + user.getIdUser() + " не обнаружен"));
 
         dbUser.setName(user.getName() != null ? user.getName() : dbUser.getName());
@@ -66,7 +66,7 @@ public class UserService {
     }
 
 
-    public Map<String, Object> deactivateUser(Integer idUser) {
+    public Map<String, Object> deactivateUser(Long idUser) {
         Map<String,Object> response = new HashMap<>();
         try{
             if(idUser == null){
@@ -75,7 +75,7 @@ public class UserService {
                 return response;
             }
 
-            User user = userRepository.findByIdUser(idUser);
+            User user = userRepository.findByIdUser(idUser).orElseThrow(() -> new MainServiceException("Пользователь c ID " + idUser + " не обнаружен"));
 
             if(user == null){
                 response.put("status",100);
@@ -105,7 +105,7 @@ public class UserService {
     }
 
 
-    public User getUserById(Integer idUser) {
-        return userRepository.findByIdUser(idUser);
+    public User getUserById(Long idUser) {
+        return userRepository.findByIdUser(idUser).orElseThrow(() -> new MainServiceException("Пользователь c ID " + idUser + " не обнаружен"));
     }
 }

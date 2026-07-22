@@ -15,10 +15,10 @@ public class DriverCard {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_driver_card")
-    private Integer idDriverCard;
+    private Long idDriverCard;
 
     @Column(name = "id_user")
-    private Integer idUser;
+    private Long idUser;
 
     @Column(name = "number", length = 255)
     private String number;
