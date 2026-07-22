@@ -71,7 +71,7 @@ public class TruckDocument {
     private String documentNumber;
 
     /**
-     * Статус технического осмотра.
+     * Статус
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
