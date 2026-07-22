@@ -22,19 +22,19 @@ public class PassportController {
     private final PassportService passportService;
 
     @GetMapping("/getPassportById")
-    public ResponseEntity<Passport> getPassportById(@RequestParam Integer idPassport){
+    public ResponseEntity<Passport> getPassportById(@RequestParam Long idPassport){
         Passport passport = passportService.getPassportById(idPassport);
         return ResponseEntity.ok(passport);
     }
 
     @GetMapping("/getActualPassportByIdUser")
-    public ResponseEntity<Passport> getActualPassportByIdUser(@RequestParam Integer idUser){
+    public ResponseEntity<Passport> getActualPassportByIdUser(@RequestParam Long idUser){
         Passport passport = passportService.getActualPassportByIdUser(idUser);
         return ResponseEntity.ok(passport);
     }
 
     @GetMapping("/getPassportsByIdUser")
-    public ResponseEntity<List<Passport>> getPassportsByIdUser(@RequestParam Integer idUser){
+    public ResponseEntity<List<Passport>> getPassportsByIdUser(@RequestParam Long idUser){
         List<Passport> allPassports = passportService.getPassportsByIdUser(idUser);
         return ResponseEntity.ok(allPassports);
     }
@@ -57,7 +57,7 @@ public class PassportController {
     }
 
     @PostMapping("/deactivatePassport")
-    public ResponseEntity<?> deactivatePassport(@RequestParam("idPassport") Integer idPassport){
+    public ResponseEntity<?> deactivatePassport(@RequestParam("idPassport") Long idPassport){
         Map<String,Object> response = new HashMap<>();
         try {
 

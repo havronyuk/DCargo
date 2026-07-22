@@ -2,12 +2,14 @@ package dccargo.dcargoservice.controller;
 
 
 import dccargo.dcargoservice.dto.dcargo.TruckDTO;
+import dccargo.dcargoservice.enums.TruckUserAssignmentType;
 import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.TruckEquipment;
 import dccargo.dcargoservice.model.dcargo.TruckMileage;
 import dccargo.dcargoservice.model.dcargo.TruckTire;
+import dccargo.dcargoservice.model.dcargo.TruckUserAssignment;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
@@ -18,11 +20,15 @@ import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
 import dccargo.dcargoservice.service.dcargo.TruckMileageService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
 import dccargo.dcargoservice.service.dcargo.TruckTireService;
+import dccargo.dcargoservice.service.dcargo.TruckUserAssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +56,8 @@ public class TruckController {
     private final TruckMileageService truckMileageService;
     
     private final TruckDTOService truckDTOService;
+    
+    private final TruckUserAssignmentService assignmentService;
     
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
@@ -328,4 +336,143 @@ public class TruckController {
         return truckMileageService.create(truckMileage);
     }
     
+    /*
+     * =============ЗАКРЕПЛЕНИ ЗА ТРАНСПОРТОМ=================
+     */
+    /**
+     * Получить все закрепления.
+     */
+    @GetMapping("/getAllTruckUserAssignment")
+    public ResponseEntity<List<TruckUserAssignment>> getAllTruckUserAssignment() {
+
+        return ResponseEntity.ok(
+                assignmentService.getAll()
+        );
+    }
+    
+    /**
+     * Получить закрепление по id.
+     */
+    @GetMapping("/getByIdTruckUserAssignment/{id}")
+    public ResponseEntity<TruckUserAssignment> getByIdTruckUserAssignment(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                assignmentService.getById(id)
+        );
+    }
+    
+    /**
+     * Получить всю историю закреплений по автомобилю.
+     */
+    @GetMapping("/getByTruckIdTruckUserAssignment/{truckId}")
+    public ResponseEntity<List<TruckUserAssignment>> getByTruckId(
+            @PathVariable Long truckId) {
+
+        return ResponseEntity.ok(
+                assignmentService.getByTruckId(truckId)
+        );
+    }
+    
+    /**
+     * Получить всю историю закреплений пользователя.
+     */
+    @GetMapping("/getByUserIdTruckUserAssignment/{userId}")
+    public ResponseEntity<List<TruckUserAssignment>> getByUserId(
+            @PathVariable Long userId) {
+
+        return ResponseEntity.ok(
+                assignmentService.getByUserId(userId)
+        );
+    }
+    
+    /**
+     * Получить активные закрепления автомобиля по типу.
+     *
+     * Примеры type:
+     * PERMANENT
+     * TEMPORARY
+     * ACTUAL
+     */
+    @GetMapping("/getActiveByTruckIdAndType/{truckId}/{type}")
+    public ResponseEntity<List<TruckUserAssignment>>
+    getActiveByTruckIdAndType(
+            @PathVariable Long truckId,
+            @PathVariable TruckUserAssignmentType type) {
+
+        return ResponseEntity.ok(
+                assignmentService.getActiveByTruckIdAndType(
+                        truckId,
+                        type
+                )
+        );
+    }
+    
+    /**
+     * Получить пользователя, который фактически
+     * сейчас находится на автомобиле.
+     *
+     * Если активного ACTUAL-закрепления нет,
+     * вернётся null.
+     */
+    @GetMapping("/getActualDriverTruckUserAssignment/{truckId}")
+    public ResponseEntity<TruckUserAssignment> getActualDriver(
+            @PathVariable Long truckId) {
+
+        return ResponseEntity.ok(
+                assignmentService.getActualDriver(truckId)
+        );
+    }
+    
+    /**
+     * Создать новое закрепление.
+     */
+    @PostMapping("/createTruckUserAssignment")
+    public ResponseEntity<TruckUserAssignment> create(
+            @RequestBody TruckUserAssignment assignment) {
+
+        return ResponseEntity.ok(
+                assignmentService.create(assignment)
+        );
+    }
+    
+    /**
+     * Частично обновить закрепление.
+     *
+     * Обязательно передать id.
+     * Остальные поля обновляются только если не null.
+     */
+    @Deprecated
+    @PostMapping("/updateTruckUserAssignment")
+    public ResponseEntity<String> update(
+            @RequestBody TruckUserAssignment assignment) {
+
+//        return ResponseEntity.ok(assignmentService.update(assignment));
+    	return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Метод отключён");
+    }
+    
+    /**
+     * Штатно завершить закрепление.
+     */
+    @GetMapping("/completeTruckUserAssignment/{id}")
+    public ResponseEntity<TruckUserAssignment> complete(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                assignmentService.complete(id)
+        );
+    }
+
+    /**
+     * Отменить закрепление.
+     */
+    @GetMapping("/cancelTruckUserAssignment/{id}")
+    public ResponseEntity<TruckUserAssignment> cancel(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                assignmentService.cancel(id)
+        );
+    }
 }
