@@ -24,7 +24,7 @@ public class UserController {
 
 
     @GetMapping("/getUserById")
-    public ResponseEntity<User> getUserById(@RequestParam Integer idUser){
+    public ResponseEntity<User> getUserById(@RequestParam Long idUser){
         User user = userService.getUserById(idUser);
         return ResponseEntity.ok(user);
     }
@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @PostMapping("/deactivateUser")
-    public ResponseEntity<?> deactivateUser(@RequestParam("idUser") Integer idUser){
+    public ResponseEntity<?> deactivateUser(@RequestParam("idUser") Long idUser){
         Map<String,Object> response = new HashMap<>();
         try {
 
