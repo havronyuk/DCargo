@@ -22,19 +22,19 @@ public class DriverCardController {
     private final DriverCardService driverCardService;
 
     @GetMapping("/getDriverCardById")
-    public ResponseEntity<DriverCard> getDriverCardById(@RequestParam Integer idDriverCard){
+    public ResponseEntity<DriverCard> getDriverCardById(@RequestParam Long idDriverCard){
         DriverCard driverCard = driverCardService.getDriverCardById(idDriverCard);
         return ResponseEntity.ok(driverCard);
     }
 
     @GetMapping("/getActualDriverCardByIdUser")
-    public ResponseEntity<DriverCard> getActualDriverCardByIdUser(@RequestParam Integer idUser){
+    public ResponseEntity<DriverCard> getActualDriverCardByIdUser(@RequestParam Long idUser){
         DriverCard driverCard = driverCardService.getActualDriverCardByIdUser(idUser);
         return ResponseEntity.ok(driverCard);
     }
 
     @GetMapping("/getDriverCardsByIdUser")
-    public ResponseEntity<List<DriverCard>> getDriverCardsByIdUser(@RequestParam Integer idUser){
+    public ResponseEntity<List<DriverCard>> getDriverCardsByIdUser(@RequestParam Long idUser){
         List<DriverCard> allCards = driverCardService.getDriverCardsByIdUser(idUser);
         return ResponseEntity.ok(allCards);
     }
@@ -56,7 +56,7 @@ public class DriverCardController {
     }
 
     @PostMapping("/deactivateDriverCard")
-    public ResponseEntity<?> deactivatePassport(@RequestParam("idDriverCard") Integer idDriverCard){
+    public ResponseEntity<?> deactivatePassport(@RequestParam("idDriverCard") Long idDriverCard){
         Map<String,Object> response = new HashMap<>();
         try {
 

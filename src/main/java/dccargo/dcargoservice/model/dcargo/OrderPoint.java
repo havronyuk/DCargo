@@ -13,13 +13,13 @@ public class OrderPoint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_order_point")
-    private Integer idOrderPoint;
+    private Long idOrderPoint;
 
     /**
      * Айди связи с ордером
      */
     @Column(name = "id_order")
-    private Integer idOrder;
+    private Long idOrder;
 
     /**
      * Айди для связи с точкой из УД
@@ -27,24 +27,45 @@ public class OrderPoint {
     @Column(name = "id_vehicle_session_point")
     private Integer idVehicleSessionPoint;
 
+    /**
+     * Айди магазина
+     */
     @Column(name = "warehouse_id")
     private Integer warehouseId;
 
+    /**
+     * Установленный тоннаж в кг
+     */
     @Column(name = "tonnage")
     private Double tonnage;
 
+    /**
+     * Паллеты
+     */
     @Column(name = "palls")
     private Double palls;
 
+    /**
+     * Нужна ли чистка
+     */
     @Column(name = "cleanings")
     private Boolean cleanings;
 
+    /**
+     * Порядковый номер
+     */
     @Column(name = "route_order")
     private Integer routeOrder;
 
+    /**
+     * Будет ли чистится по факту
+     */
     @Column(name = "is_cleaned")
     private Boolean isCleaned;
 
+    /**
+     * Интервал чисток
+     */
     @Column(name = "cleaning_interval")
     private Integer cleaningInterval;
 
@@ -60,6 +81,9 @@ public class OrderPoint {
     @Column(name = "lng", length = 255)
     private String lng;
 
+    /**
+     * Адрес магазина
+     */
     @Column(name = "address", length = 255)
     private String address;
 

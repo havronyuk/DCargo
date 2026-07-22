@@ -3,6 +3,7 @@ package dccargo.dcargoservice.model.dcargo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_order")
-    private Integer idOrder;
+    private Long idOrder;
 
     /**
      * Айди для связки из уд
@@ -109,4 +110,25 @@ public class Order {
     @Column(name = "created_by", length = 255)
     private String createdBy;
 
+    /**
+     * Затраты
+     */
+    @Column(name = "cost")
+    private Double cost;
+
+    /**
+     * Внутренние затраты
+     */
+    @Column(name = "cost_internal")
+    private Double costInternal;
+
+    /**
+     * Валюта
+     */
+    @Column(name = "currency", length = 45)
+    private String currency;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_order", referencedColumnName = "id_order")
+    private List<OrderPoint> orderPoints;
 }
