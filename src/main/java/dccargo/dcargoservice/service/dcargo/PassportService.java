@@ -79,7 +79,7 @@ public class PassportService {
         return updatedPassport;
     }
 
-    public Map<String, Object> deactivatePassport(Integer idPassport) {
+    public Map<String, Object> deactivatePassport(Long idPassport) {
         Map<String,Object> response = new HashMap<>();
         try{
             if(idPassport == null){
@@ -113,16 +113,16 @@ public class PassportService {
     }
 
 
-    public Passport getPassportById(Integer idPassport) {
+    public Passport getPassportById(Long idPassport) {
         return passportRepository.findByIdPassport(idPassport);
     }
 
 
-    public Passport getActualPassportByIdUser(Integer idUser) {
+    public Passport getActualPassportByIdUser(Long idUser) {
         return passportRepository.findByIdUserAndBlock(idUser,false);
     }
 
-    public List<Passport> getPassportsByIdUser(Integer idUser) {
+    public List<Passport> getPassportsByIdUser(Long idUser) {
         return passportRepository.findAllByIdUser(idUser);
 
     }

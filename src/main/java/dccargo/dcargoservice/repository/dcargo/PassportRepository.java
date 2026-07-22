@@ -7,16 +7,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PassportRepository extends JpaRepository<Passport, Integer> {
+public interface PassportRepository extends JpaRepository<Passport, Long> {
 
     boolean existsByPersonalNumber(String personalNumber);
 
-    boolean existsByIdUserAndBlock(Integer idUser,Boolean block);
+    boolean existsByIdUserAndBlock(Long idUser,Boolean block);
 
-    Passport findByIdUserAndBlock(Integer idUser,Boolean block);
+    Passport findByIdUserAndBlock(Long idUser,Boolean block);
 
-    Passport findByIdPassport(Integer idPassport);
+    Passport findByIdPassport(Long idPassport);
 
-    List<Passport> findAllByIdUser(Integer idUser);
+    List<Passport> findAllByIdUser(Long idUser);
 
 }
