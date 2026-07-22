@@ -1,17 +1,23 @@
 package dccargo.dcargoservice.controller;
 
 
+import dccargo.dcargoservice.dto.dcargo.TruckDTO;
 import dccargo.dcargoservice.model.dcargo.DocumentType;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
 import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.TruckEquipment;
+import dccargo.dcargoservice.model.dcargo.TruckMileage;
+import dccargo.dcargoservice.model.dcargo.TruckTire;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.DocumentTypeRepository;
 import dccargo.dcargoservice.service.dcargo.DocumentTypeService;
 import dccargo.dcargoservice.service.dcargo.EquipmentTypeService;
+import dccargo.dcargoservice.service.dcargo.TruckDTOService;
 import dccargo.dcargoservice.service.dcargo.TruckDocumentService;
 import dccargo.dcargoservice.service.dcargo.TruckEquipmentService;
+import dccargo.dcargoservice.service.dcargo.TruckMileageService;
 import dccargo.dcargoservice.service.dcargo.TruckService;
+import dccargo.dcargoservice.service.dcargo.TruckTireService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,15 +45,50 @@ public class TruckController {
     
     private final TruckEquipmentService truckEquipmentService;
     
+    private final TruckTireService truckTireService;
+    
+    private final TruckMileageService truckMileageService;
+    
+    private final TruckDTOService truckDTOService;
+    
     @GetMapping("/echo")
     public ResponseEntity<String> echo() {
         return ResponseEntity.ok("echo");
     }
-        
+    
+    
+    /**
+     * Получить все машины без связей
+     * @return
+     */
     @GetMapping("/getAllTruck")
     public ResponseEntity<List<Truck>> getAllTruck() {
     	List<Truck> trucks = truckService.getAllTruck();
         return ResponseEntity.ok(trucks);
+    }
+    
+    /**
+     * Получить одну машину со всеми данными.
+     * отдаёт связи у которых статус ACTIVE или утсановлено, если колёса
+     */
+    @GetMapping("/getTruck/{truckId}/full")
+    public ResponseEntity<TruckDTO> getById(
+            @PathVariable Long truckId
+    ) {
+        return ResponseEntity.ok(
+                truckDTOService.getById(truckId)
+        );
+    }
+
+    /**
+     * Получить все машины со всеми данными.
+     * отдаёт связи у которых статус ACTIVE или утсановлено, если колёса
+     */
+    @GetMapping("/getAllTruck/full")
+    public ResponseEntity<List<TruckDTO>> getAll() {
+        return ResponseEntity.ok(
+                truckDTOService.getAll()
+        );
     }
     
     /**
@@ -205,5 +246,86 @@ public class TruckController {
 
         return ResponseEntity.ok(updatedTruckEquipment);
     }
+    
+    /*
+     * =============КОЛЁСА=================
+     */
+    /**
+     * Получить все шины
+     */
+    @GetMapping("/getAllTruckTire")
+    public List<TruckTire> getAllTruckTire() {
+        return truckTireService.getAllTruckTire();
+    }
+    
+    /**
+     * Получить шины транспортного средства
+     */
+    @GetMapping("/getTruckTire/{truckId}")
+    public List<TruckTire> getTruckTire(@PathVariable Long truckId) {
 
+        return truckTireService.getByTruckId(truckId);
+    }
+    
+    /**
+     * Создать новую шину
+     */
+    @PostMapping("/createNewTruckTire")
+    public TruckTire createNewTruckTire(@RequestBody TruckTire truckTire) {
+
+        return truckTireService.create(truckTire);
+    }
+    
+    /**
+     * Обновить данные шины
+     */
+    @PostMapping("/updateTruckTire")
+    public TruckTire updateTruckTire(@RequestBody TruckTire truckTire) {
+
+        return truckTireService.update(truckTire);
+    }
+    
+    /*
+     * =============ПРОБЕГ=================
+     */
+
+    /**
+     * Получить все записи пробега.
+     */
+    @GetMapping("/getAllTruckMileage")
+    public List<TruckMileage> getAllTruckMileage() {
+    	//TODO потом отключить
+        return truckMileageService.getAllTruckMileage();
+    }
+
+    /**
+     * Получить всю историю пробега автомобиля.
+     */
+    @GetMapping("/getTruckMileage/{truckId}")
+    public List<TruckMileage> getTruckMileage(
+            @PathVariable Long truckId) {
+
+        return truckMileageService.getByTruckId(truckId);
+    }
+
+    /**
+     * Получить последний зафиксированный пробег автомобиля.
+     */
+    @GetMapping("/getLastTruckMileage/{truckId}")
+    public TruckMileage getLastTruckMileage(
+            @PathVariable Long truckId) {
+
+        return truckMileageService.getLastMileage(truckId);
+    }
+
+    /**
+     * Создать новую запись пробега.
+     */
+    @PostMapping("/createNewTruckMileage")
+    public TruckMileage createNewTruckMileage(
+            @RequestBody TruckMileage truckMileage) {
+
+        return truckMileageService.create(truckMileage);
+    }
+    
 }

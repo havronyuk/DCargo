@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.repository.dcargo;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,15 @@ public interface TruckEquipmentRepository extends JpaRepository<TruckEquipment, 
     List<TruckEquipment> findByEquipmentTypeId(Long equipmentTypeId);
 
     List<TruckEquipment> findByStatus(TruckEquipmentStatus status);
+    
+    List<TruckEquipment> findAllByTruckIdAndStatusOrderByInstallationDateDesc(
+            Long truckId,
+            TruckEquipmentStatus status
+    );
+
+    List<TruckEquipment> findAllByTruckIdIn(
+            Collection<Long> truckIds
+    );
 
     boolean existsByInventoryNumber(String inventoryNumber);
 

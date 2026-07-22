@@ -67,7 +67,7 @@ public class TruckTireService {
         truckTire.setCreatedAt(LocalDateTime.now());
         truckTire.setStatus(TireStatus.INSTALLED);
 
-        // TODO автоматически получать пробег автомобиля
+        // TODO автоматически получать пробег автомобиля И User
         // truckTire.setMileageStartId(...)
         // truckTire.setMileageStartValue(...)
 

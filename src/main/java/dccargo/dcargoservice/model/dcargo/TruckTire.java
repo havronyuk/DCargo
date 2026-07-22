@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.model.dcargo;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import dccargo.dcargoservice.enums.TirePosition;
@@ -63,8 +64,9 @@ public class TruckTire {
     /** Высота профиля (например 70) */
     private Integer profile;
 
-    /** Диаметр (например 22.5) */
-    private Double diameter;
+    /** Диаметр шины в дюймах, например 22.5 */
+    @Column(precision = 5, scale = 2)
+    private BigDecimal diameter;
 
     /** Дата производства */
     private LocalDateTime manufactureDate;
@@ -98,13 +100,16 @@ public class TruckTire {
     private Integer mileageEndValue;
 
     /** Глубина протектора при установке (мм) */
-    private Double treadDepthStart;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal treadDepthStart;
 
     /** Текущая глубина протектора (мм) */
-    private Double treadDepthCurrent;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal treadDepthCurrent;
 
     /** Текущее давление (бар) */
-    private Double pressure;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal pressure;
 
     /** Статус шины */
     @Enumerated(EnumType.STRING)
