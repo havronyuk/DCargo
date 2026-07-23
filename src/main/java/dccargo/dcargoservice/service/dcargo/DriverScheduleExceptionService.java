@@ -4,13 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import dccargo.dcargoservice.enums.DriverScheduleExceptionType;
 import dccargo.dcargoservice.model.dcargo.DriverScheduleException;
 import dccargo.dcargoservice.repository.dcargo.DriverScheduleExceptionRepository;
 import dccargo.dcargoservice.repository.dcargo.DriverWorkScheduleRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import dccargo.dcargoservice.dto.dcargo.TruckDTO;
 import dccargo.dcargoservice.dto.dcargo.mapper.TruckDTOMapper;
@@ -24,7 +25,6 @@ import dccargo.dcargoservice.repository.dcargo.TruckMileageRepository;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import dccargo.dcargoservice.repository.dcargo.TruckTireRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
