@@ -20,5 +20,7 @@ public class OrderService {
     }
 
 
-
+    public Order createOrderFromShipment(Order order) {
+        return null;
+    }
 }
