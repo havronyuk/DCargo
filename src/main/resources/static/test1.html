@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCargo — тестирование рабочих графиков</title>
+  <style>
+    :root {
+      --bg:#f3f5f8; --card:#fff; --text:#172033; --muted:#687386; --border:#dce2ea;
+      --primary:#2563eb; --primary2:#1d4ed8; --green:#15803d; --red:#b91c1c;
+      --orange:#c2410c; --purple:#7e22ce; --shadow:0 10px 30px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    header{background:linear-gradient(135deg,#111827,#1d4ed8);color:#fff;padding:28px 22px}
+    header .inner,main{max-width:1450px;margin:auto}
+    h1{margin:0 0 8px;font-size:30px}
+    header p{margin:0;color:#dbeafe}
+    main{padding:20px}
+    .config,.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+    .config{padding:18px;margin-bottom:18px;display:grid;grid-template-columns:2fr 2fr auto auto;gap:12px;align-items:end}
+    label{font-size:13px;font-weight:700;color:#475569;display:block;margin-bottom:6px}
+    input,select,textarea,button{font:inherit}
+    input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:9px;padding:10px 11px;background:#fff}
+    textarea{min-height:150px;resize:vertical;font-family:Consolas,monospace;font-size:13px}
+    button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn{background:var(--primary);color:#fff}
+    .btn:hover{background:var(--primary2)}
+    .btn-secondary{background:#e2e8f0;color:#1e293b}
+    .btn-danger{background:#fee2e2;color:#991b1b}
+    .status-dot{width:12px;height:12px;border-radius:50%;display:inline-block;background:#94a3b8;margin-right:7px}
+    .status-ok{background:#22c55e}.status-bad{background:#ef4444}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .tab{background:#e9eef5;color:#334155}
+    .tab.active{background:#1d4ed8;color:#fff}
+    .panel{padding:20px;display:none}
+    .panel.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff}
+    .card h3{margin:0 0 12px;font-size:18px}
+    .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .endpoint{font-family:Consolas,monospace;font-size:12px;color:#475569;background:#f8fafc;padding:8px;border-radius:8px;margin-bottom:12px;overflow-wrap:anywhere}
+    .response-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+    .response-box{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px;min-height:180px;max-height:520px;overflow:auto;white-space:pre-wrap;font:13px/1.5 Consolas,monospace}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:10px}
+    .calendar{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;overflow-x:auto}
+    .weekday{font-size:12px;font-weight:800;color:#64748b;text-align:center;padding:6px}
+    .day{border:1px solid var(--border);border-radius:10px;min-height:110px;padding:9px;background:#fff}
+    .day.empty{background:#f8fafc;border-style:dashed}
+    .date{font-weight:800;font-size:13px;margin-bottom:7px}
+    .shift{border-radius:8px;padding:6px 8px;margin:5px 0;font-size:12px;border-left:4px solid}
+    .working{background:#dcfce7;border-color:#16a34a}
+    .off{background:#f1f5f9;border-color:#64748b}
+    .vacation{background:#ede9fe;border-color:#7c3aed}
+    .sick{background:#fee2e2;border-color:#dc2626}
+    .replacement{background:#ffedd5;border-color:#ea580c}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;font-size:13px}
+    .legend span{padding:5px 9px;border-radius:999px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:1px solid var(--border);padding:8px;text-align:left}
+    th{background:#f8fafc}
+    .small{font-size:12px;color:var(--muted)}
+    .hidden{display:none!important}
+    @media(max-width:1000px){.config,.grid,.response-layout{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(7,150px)}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>DCargo — тестовая панель рабочих графиков</h1>
+    <p>Шаблоны, назначения водителей, календарь смен и исключения без Postman.</p>
+  </div>
+</header>
+
+<main>
+  <section class="config">
+    <div>
+      <label>Адрес сервера</label>
+      <input id="baseUrl" value="http://localhost:14010" placeholder="http://localhost:14010">
+    </div>
+    <div>
+      <label>Bearer token — необязательно</label>
+      <input id="token" placeholder="JWT без слова Bearer">
+    </div>
+    <button class="btn-secondary" onclick="saveSettings()">Сохранить</button>
+    <button class="btn" onclick="testConnection()"><span id="connectionDot" class="status-dot"></span>Проверить</button>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active" onclick="openTab('templates',this)">Шаблоны</button>
+    <button class="tab" onclick="openTab('assignments',this)">Назначения</button>
+    <button class="tab" onclick="openTab('calendarTab',this)">Календарь</button>
+    <button class="tab" onclick="openTab('exceptions',this)">Исключения</button>
+    <button class="tab" onclick="openTab('consoleTab',this)">Консоль</button>
+  </div>
+
+  <section id="templates" class="panel active">
+    <div class="grid">
+      <div class="card">
+        <h3>Создать шаблон</h3>
+        <div class="endpoint">POST /work-schedule/create</div>
+        <div class="row">
+          <div><label>Название</label><input id="wsName" value="График 2 через 2"></div>
+          <div><label>Рабочих дней</label><input id="wsWorkDays" type="number" value="2"></div>
+          <div><label>Выходных дней</label><input id="wsRestDays" type="number" value="2"></div>
+        </div>
+        <div class="actions"><button class="btn" onclick="createTemplate()">Создать</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Обновить шаблон</h3>
+        <div class="endpoint">PUT /work-schedule/{id}</div>
+        <div class="row">
+          <div><label>ID</label><input id="wsUpdateId" type="number" value="1"></div>
+          <div><label>Название</label><input id="wsUpdateName" value="Основной график 2/2"></div>
+          <div><label>Рабочих дней</label><input id="wsUpdateWork" type="number" value="2"></div>
+          <div><label>Выходных дней</label><input id="wsUpdateRest" type="number" value="2"></div>
+        </div>
+        <div class="actions"><button class="btn" onclick="updateTemplate()">Обновить</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Получение шаблонов</h3>
+        <div class="row">
+          <div><label>ID шаблона</label><input id="wsGetId" type="number" value="1"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="getTemplate()">Получить по ID</button>
+          <button class="btn-secondary" onclick="getAllTemplates()">Получить все</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Удалить шаблон</h3>
+        <div class="endpoint">DELETE /work-schedule/{id}</div>
+        <label>ID шаблона</label><input id="wsDeleteId" type="number" value="1">
+        <div class="actions"><button class="btn-danger" onclick="deleteTemplate()">Удалить</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="assignments" class="panel">
+    <div class="grid">
+      <div class="card">
+        <h3>Назначить одного водителя</h3>
+        <div class="endpoint">POST /work-schedule/assignment/create</div>
+        <textarea id="assignmentJson">{
+  "userId": 10,
+  "truckId": 5,
+  "scheduleId": 1,
+  "cycleStartDate": "2026-07-22",
+  "cycleOffset": 0,
+  "dateFrom": "2026-07-22",
+  "dateTo": null,
+  "status": "ACTIVE"
+}</textarea>
+        <div class="actions"><button class="btn" onclick="createAssignment()">Создать назначение</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Закрепить двух водителей</h3>
+        <div class="endpoint">POST /work-schedule/assignment/assign-two-drivers</div>
+        <textarea id="twoDriversJson">{
+  "truckId": 5,
+  "scheduleId": 1,
+  "firstDriverId": 10,
+  "secondDriverId": 11,
+  "cycleStartDate": "2026-07-22",
+  "dateFrom": "2026-07-22"
+}</textarea>
+        <div class="actions"><button class="btn" onclick="assignTwoDrivers()">Закрепить</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Обновить назначение</h3>
+        <div class="endpoint">PUT /work-schedule/assignment/{id}</div>
+        <label>ID назначения</label><input id="assignmentUpdateId" type="number" value="1">
+        <textarea id="assignmentUpdateJson">{
+  "truckId": 6,
+  "cycleStartDate": "2026-08-01",
+  "cycleOffset": 0
+}</textarea>
+        <div class="actions"><button class="btn" onclick="updateAssignment()">Обновить</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Закрыть назначение</h3>
+        <div class="endpoint">PUT /work-schedule/assignment/{id}/close?dateTo=...</div>
+        <div class="row">
+          <div><label>ID назначения</label><input id="assignmentCloseId" type="number" value="1"></div>
+          <div><label>Дата окончания</label><input id="assignmentCloseDate" type="date" value="2026-08-31"></div>
+        </div>
+        <div class="actions"><button class="btn" onclick="closeAssignment()">Закрыть</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Получить назначения</h3>
+        <div class="row">
+          <div><label>ID назначения</label><input id="assignmentGetId" type="number" value="1"></div>
+          <div><label>ID автомобиля</label><input id="assignmentTruckId" type="number" value="5"></div>
+          <div><label>ID водителя</label><input id="assignmentUserId" type="number" value="10"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="getAssignment()">По ID</button>
+          <button class="btn-secondary" onclick="getTruckAssignments(false)">Все машины</button>
+          <button class="btn-secondary" onclick="getTruckAssignments(true)">Только активные</button>
+          <button class="btn-secondary" onclick="getUserAssignments()">По водителю</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="calendarTab" class="panel">
+    <div class="card">
+      <h3>Календарь автомобиля</h3>
+      <div class="endpoint">GET /work-schedule/calendar/truck/{truckId}?dateFrom=...&dateTo=...</div>
+      <div class="row">
+        <div><label>ID автомобиля</label><input id="calendarTruckId" type="number" value="5"></div>
+        <div><label>Дата начала</label><input id="calendarFrom" type="date" value="2026-07-22"></div>
+        <div><label>Дата окончания</label><input id="calendarTo" type="date" value="2026-08-15"></div>
+      </div>
+      <div class="actions"><button class="btn" onclick="loadCalendar()">Показать календарь</button></div>
+    </div>
+
+    <div class="legend">
+      <span class="working">Работает</span><span class="off">Выходной</span>
+      <span class="vacation">Отпуск</span><span class="sick">Больничный</span>
+      <span class="replacement">Замена</span>
+    </div>
+    <div id="calendarContainer"></div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>Проверка одного водителя</h3>
+      <div class="row">
+        <div><label>ID водителя</label><input id="workingUserId" type="number" value="10"></div>
+        <div><label>Дата</label><input id="workingDate" type="date" value="2026-07-22"></div>
+      </div>
+      <div class="actions"><button class="btn" onclick="checkWorking()">Проверить</button></div>
+      <div id="workingResult" style="margin-top:12px;font-size:18px;font-weight:800"></div>
+    </div>
+  </section>
+
+  <section id="exceptions" class="panel">
+    <div class="grid">
+      <div class="card">
+        <h3>Создать исключение</h3>
+        <div class="endpoint">POST /work-schedule/exception/create</div>
+        <textarea id="exceptionJson">{
+  "userId": 10,
+  "truckId": 5,
+  "exceptionDate": "2026-07-23",
+  "exceptionType": "DAY_OFF",
+  "comment": "Выходной по согласованию",
+  "createdByUserId": 1
+}</textarea>
+        <div class="actions">
+          <button class="btn" onclick="createException()">Создать</button>
+          <button class="btn-secondary" onclick="fillException('DAY_OFF')">Выходной</button>
+          <button class="btn-secondary" onclick="fillException('WORKING')">Рабочий</button>
+          <button class="btn-secondary" onclick="fillException('VACATION')">Отпуск</button>
+          <button class="btn-secondary" onclick="fillException('SICK_LEAVE')">Больничный</button>
+          <button class="btn-secondary" onclick="fillException('REPLACEMENT')">Замена</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Обновить исключение</h3>
+        <label>ID исключения</label><input id="exceptionUpdateId" type="number" value="1">
+        <textarea id="exceptionUpdateJson">{
+  "exceptionType": "SICK_LEAVE",
+  "comment": "Открыт больничный лист"
+}</textarea>
+        <div class="actions"><button class="btn" onclick="updateException()">Обновить</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Получить исключения</h3>
+        <div class="row">
+          <div><label>ID исключения</label><input id="exceptionGetId" type="number" value="1"></div>
+          <div><label>ID автомобиля</label><input id="exceptionTruckId" type="number" value="5"></div>
+          <div><label>ID водителя</label><input id="exceptionUserId" type="number" value="10"></div>
+          <div><label>Дата</label><input id="exceptionDate" type="date" value="2026-07-23"></div>
+          <div><label>Дата начала</label><input id="exceptionFrom" type="date" value="2026-07-22"></div>
+          <div><label>Дата окончания</label><input id="exceptionTo" type="date" value="2026-07-31"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="getException()">По ID</button>
+          <button class="btn-secondary" onclick="getExceptionByDate()">Водитель + дата</button>
+          <button class="btn-secondary" onclick="getTruckExceptions()">По машине</button>
+          <button class="btn-secondary" onclick="getUserExceptions()">По водителю</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Удалить исключение</h3>
+        <label>ID исключения</label><input id="exceptionDeleteId" type="number" value="1">
+        <div class="actions"><button class="btn-danger" onclick="deleteException()">Удалить</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="consoleTab" class="panel">
+    <div class="response-layout">
+      <div class="card">
+        <h3>Последний ответ</h3>
+        <div id="responseMeta" class="meta">Запросы ещё не выполнялись</div>
+        <div id="responseBox" class="response-box"></div>
+      </div>
+      <div class="card">
+        <h3>История запросов</h3>
+        <table>
+          <thead><tr><th>Метод</th><th>URL</th><th>Статус</th><th>мс</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+        <div class="actions"><button class="btn-secondary" onclick="clearHistory()">Очистить</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const API_PREFIX = '/work-schedule';
+  const historyItems = [];
+
+  function $(id){ return document.getElementById(id); }
+  function value(id){ return $(id).value.trim(); }
+  function numberOrNull(id){ const v=value(id); return v===''?null:Number(v); }
+
+  function openTab(id, button){
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    $(id).classList.add('active'); button.classList.add('active');
+  }
+
+  function saveSettings(){
+    localStorage.setItem('dcargoBaseUrl', value('baseUrl'));
+    localStorage.setItem('dcargoToken', value('token'));
+    alert('Настройки сохранены');
+  }
+
+  function loadSettings(){
+    $('baseUrl').value = localStorage.getItem('dcargoBaseUrl') || $('baseUrl').value;
+    $('token').value = localStorage.getItem('dcargoToken') || '';
+  }
+
+  function apiUrl(path){
+    return value('baseUrl').replace(/\/+$/,'') + path;
+  }
+
+  async function request(method, path, body){
+    const url=apiUrl(path);
+    const headers={'Accept':'application/json'};
+    const token=value('token');
+    if(token) headers['Authorization']='Bearer '+token;
+    if(body!==undefined) headers['Content-Type']='application/json';
+
+    const started=performance.now();
+    let status=0, parsed=null, raw='';
+    try{
+      const response=await fetch(url,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+      status=response.status;
+      raw=await response.text();
+      try{ parsed=raw?JSON.parse(raw):null; }catch{ parsed=raw; }
+      showResponse(method,url,status,Math.round(performance.now()-started),parsed);
+      if(!response.ok) throw new Error(typeof parsed==='string'?parsed:JSON.stringify(parsed));
+      return parsed;
+    }catch(e){
+      if(status===0) showResponse(method,url,'NETWORK',Math.round(performance.now()-started),String(e));
+      throw e;
+    }
+  }
+
+  function showResponse(method,url,status,ms,data){
+    $('responseMeta').innerHTML=`<strong>${method}</strong> ${escapeHtml(url)} · статус <strong>${status}</strong> · ${ms} мс`;
+    $('responseBox').textContent=typeof data==='string'?data:JSON.stringify(data,null,2);
+    historyItems.unshift({method,url,status,ms});
+    if(historyItems.length>30) historyItems.pop();
+    renderHistory();
+  }
+
+  function renderHistory(){
+    $('historyBody').innerHTML=historyItems.map(x=>`<tr><td>${x.method}</td><td>${escapeHtml(x.url)}</td><td>${x.status}</td><td>${x.ms}</td></tr>`).join('');
+  }
+
+  function clearHistory(){ historyItems.length=0; renderHistory(); $('responseBox').textContent=''; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+  function parseJson(id){ try{return JSON.parse($(id).value)}catch(e){alert('Ошибка JSON: '+e.message);throw e;} }
+
+  async function testConnection(){
+    const dot=$('connectionDot');
+    try{ await request('GET',API_PREFIX+'/all'); dot.className='status-dot status-ok'; }
+    catch{ dot.className='status-dot status-bad'; }
+  }
+
+  async function createTemplate(){
+    await request('POST',API_PREFIX+'/create',{name:value('wsName'),workDays:numberOrNull('wsWorkDays'),restDays:numberOrNull('wsRestDays')});
+  }
+  async function updateTemplate(){
+    await request('PUT',API_PREFIX+'/'+numberOrNull('wsUpdateId'),{name:value('wsUpdateName'),workDays:numberOrNull('wsUpdateWork'),restDays:numberOrNull('wsUpdateRest')});
+  }
+  async function getTemplate(){ await request('GET',API_PREFIX+'/'+numberOrNull('wsGetId')); }
+  async function getAllTemplates(){ await request('GET',API_PREFIX+'/all'); }
+  async function deleteTemplate(){ if(confirm('Удалить шаблон?')) await request('DELETE',API_PREFIX+'/'+numberOrNull('wsDeleteId')); }
+
+  async function createAssignment(){ await request('POST',API_PREFIX+'/assignment/create',parseJson('assignmentJson')); }
+  async function assignTwoDrivers(){ await request('POST',API_PREFIX+'/assignment/assign-two-drivers',parseJson('twoDriversJson')); }
+  async function updateAssignment(){ await request('PUT',API_PREFIX+'/assignment/'+numberOrNull('assignmentUpdateId'),parseJson('assignmentUpdateJson')); }
+  async function closeAssignment(){ await request('PUT',API_PREFIX+'/assignment/'+numberOrNull('assignmentCloseId')+'/close?dateTo='+encodeURIComponent(value('assignmentCloseDate'))); }
+  async function getAssignment(){ await request('GET',API_PREFIX+'/assignment/'+numberOrNull('assignmentGetId')); }
+  async function getTruckAssignments(active){
+    let path=API_PREFIX+'/assignment/truck/'+numberOrNull('assignmentTruckId');
+    if(active) path+='/active';
+    await request('GET',path);
+  }
+  async function getUserAssignments(){ await request('GET',API_PREFIX+'/assignment/user/'+numberOrNull('assignmentUserId')); }
+
+  async function loadCalendar(){
+    const truck=numberOrNull('calendarTruckId'), from=value('calendarFrom'), to=value('calendarTo');
+    const data=await request('GET',`${API_PREFIX}/calendar/truck/${truck}?dateFrom=${encodeURIComponent(from)}&dateTo=${encodeURIComponent(to)}`);
+    renderCalendar(Array.isArray(data)?data:[],from,to);
+  }
+
+  async function checkWorking(){
+    const result=await request('GET',`${API_PREFIX}/calendar/user/${numberOrNull('workingUserId')}/working?date=${encodeURIComponent(value('workingDate'))}`);
+    $('workingResult').textContent=result?'✅ Водитель работает':'❌ Водитель не работает';
+    $('workingResult').style.color=result?'#15803d':'#b91c1c';
+  }
+
+  /*
+   * LocalDate из Java приходит строкой yyyy-MM-dd.
+   * Здесь принципиально не используем new Date("yyyy-MM-dd")
+   * и date.toISOString(), потому что они применяют UTC и могут
+   * сдвинуть календарную дату на один день.
+   */
+  function parseLocalDate(dateString){
+    const [year,month,day]=dateString.split('-').map(Number);
+    return new Date(year,month-1,day,12,0,0);
+  }
+
+  function formatLocalDate(date){
+    const year=date.getFullYear();
+    const month=String(date.getMonth()+1).padStart(2,'0');
+    const day=String(date.getDate()).padStart(2,'0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function renderCalendar(items,from,to){
+    const container=$('calendarContainer');
+    const byDate={};
+
+    items.forEach(item=>{
+      const dateKey=String(item.date);
+      (byDate[dateKey]??=[]).push(item);
+    });
+
+    const start=parseLocalDate(from);
+    const end=parseLocalDate(to);
+    const weekdays=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+    let html='<div class="calendar">'
+      +weekdays.map(day=>`<div class="weekday">${day}</div>`).join('');
+
+    const offset=(start.getDay()+6)%7;
+
+    for(let i=0;i<offset;i++){
+      html+='<div class="day empty"></div>';
+    }
+
+    for(
+      let current=new Date(start);
+      current<=end;
+      current.setDate(current.getDate()+1)
+    ){
+      const dateKey=formatLocalDate(current);
+      const rows=byDate[dateKey]||[];
+
+      html+=`
+        <div class="day">
+          <div class="date">
+            ${current.toLocaleDateString('ru-RU',{
+              day:'2-digit',
+              month:'2-digit',
+              weekday:'short'
+            })}
+          </div>
+      `;
+
+      if(!rows.length){
+        html+='<div class="small">Нет назначений</div>';
+      }
+
+      rows.forEach(item=>{
+        const cls=statusClass(item.status,item.actualWorking);
+
+        const replacement=item.replacementUserId
+          ? `<br>Замена: ${escapeHtml(item.replacementUserId)}`
+          : '';
+
+        const comment=item.comment
+          ? `<br>${escapeHtml(item.comment)}`
+          : '';
+
+        html+=`
+          <div class="shift ${cls}">
+            <strong>Водитель ${escapeHtml(item.userId)}</strong>
+            <br>
+            ${escapeHtml(item.statusDescription||item.status||'')}
+            ${replacement}
+            ${comment}
+          </div>
+        `;
+      });
+
+      html+='</div>';
+    }
+
+    html+='</div>';
+    container.innerHTML=html;
+  }
+
+  function statusClass(status,working){
+    if(status==='VACATION') return 'vacation';
+    if(status==='SICK_LEAVE') return 'sick';
+    if(status==='REPLACEMENT') return 'replacement';
+    return working?'working':'off';
+  }
+
+  function fillException(type){
+    const body={userId:10,truckId:5,exceptionDate:'2026-07-23',exceptionType:type,comment:'',createdByUserId:1};
+    if(type==='DAY_OFF') body.comment='Выходной по согласованию';
+    if(type==='WORKING') body.comment='Дополнительная смена';
+    if(type==='VACATION') body.comment='Ежегодный отпуск';
+    if(type==='SICK_LEAVE') body.comment='Больничный';
+    if(type==='REPLACEMENT'){body.replacementUserId=15;body.comment='Замена водителем 15';}
+    $('exceptionJson').value=JSON.stringify(body,null,2);
+  }
+
+  async function createException(){ await request('POST',API_PREFIX+'/exception/create',parseJson('exceptionJson')); }
+  async function updateException(){ await request('PUT',API_PREFIX+'/exception/'+numberOrNull('exceptionUpdateId'),parseJson('exceptionUpdateJson')); }
+  async function getException(){ await request('GET',API_PREFIX+'/exception/'+numberOrNull('exceptionGetId')); }
+  async function getExceptionByDate(){ await request('GET',`${API_PREFIX}/exception/user/${numberOrNull('exceptionUserId')}/date?date=${encodeURIComponent(value('exceptionDate'))}`); }
+  async function getTruckExceptions(){ await request('GET',`${API_PREFIX}/exception/truck/${numberOrNull('exceptionTruckId')}?dateFrom=${encodeURIComponent(value('exceptionFrom'))}&dateTo=${encodeURIComponent(value('exceptionTo'))}`); }
+  async function getUserExceptions(){ await request('GET',`${API_PREFIX}/exception/user/${numberOrNull('exceptionUserId')}?dateFrom=${encodeURIComponent(value('exceptionFrom'))}&dateTo=${encodeURIComponent(value('exceptionTo'))}`); }
+  async function deleteException(){ if(confirm('Удалить исключение?')) await request('DELETE',API_PREFIX+'/exception/'+numberOrNull('exceptionDeleteId')); }
+
+  loadSettings();
+</script>
+</body>
+</html>
