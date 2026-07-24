@@ -1,5 +1,7 @@
     package dccargo.dcargoservice.model.dcargo;
 
+    import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+    import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
     import jakarta.persistence.*;
     import lombok.Getter;
     import lombok.Setter;
@@ -13,12 +15,14 @@
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "id_order_point")
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long idOrderPoint;
 
         /**
          * Айди связи с ордером
          */
         @Column(name = "id_order")
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long idOrder;
 
         /**
