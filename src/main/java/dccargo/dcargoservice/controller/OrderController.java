@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -26,6 +29,11 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+    @GetMapping("/getOrdersByDeliveryDateAndTypeSklad")
+    public ResponseEntity<List<Order>> getOrdersByDeliveryDateAndTypeSklad(@RequestParam LocalDate deliveryDate, String typeSklad){
+        List<Order> orderList= orderService.getOrdersByDeliveryDateAndTypeSklad(deliveryDate, typeSklad);
+        return ResponseEntity.ok(orderList);
+    }
 
 
 
