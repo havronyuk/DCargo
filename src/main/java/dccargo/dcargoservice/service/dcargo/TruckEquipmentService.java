@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import dccargo.dcargoservice.enums.TruckEquipmentStatus;
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
@@ -12,7 +13,6 @@ import dccargo.dcargoservice.model.dcargo.TruckEquipment;
 import dccargo.dcargoservice.repository.dcargo.TruckEquipmentRepository;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

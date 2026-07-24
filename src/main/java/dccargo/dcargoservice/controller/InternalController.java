@@ -20,10 +20,15 @@ public class InternalController {
     private final OrderService orderService;
 
     @PostMapping("/createOrderFromShipment")
-    public ResponseEntity<Order> createOrderFromShipment(@RequestBody Order order) {
-        Order savedOrder = orderService.createOrderFromShipment(order);
+    public ResponseEntity<Object> createOrderFromShipment(@RequestBody Order order) {
+        try {
+            Order savedOrder = orderService.createOrderFromShipment(order);
 
-        return ResponseEntity.ok(savedOrder);
+            return ResponseEntity.ok(savedOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
 

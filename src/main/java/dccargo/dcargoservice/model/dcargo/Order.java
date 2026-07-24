@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,18 +14,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "order")
+@Table(name = "`order`")
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_order")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long idOrder;
 
     /**
      * Айди для связки из уд
      */
     @Column(name = "id_vehicle_session")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long idVehicleSession;
 
     /**
@@ -128,7 +132,34 @@ public class Order {
     @Column(name = "currency", length = 45)
     private String currency;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "id_order", referencedColumnName = "id_order")
     private List<OrderPoint> orderPoints;
+
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "idOrder=" + idOrder +
+                ", idVehicleSession=" + idVehicleSession +
+                ", firmName='" + firmName + '\'' +
+                ", maxPall=" + maxPall +
+                ", maxWeigth=" + maxWeigth +
+                ", targetPall=" + targetPall +
+                ", targetWeigth=" + targetWeigth +
+                ", typeSklad='" + typeSklad + '\'' +
+                ", deliveryDate=" + deliveryDate +
+                ", shipmentPlanDate=" + shipmentPlanDate +
+                ", status=" + status +
+                ", isCrossDock=" + isCrossDock +
+                ", isKep=" + isKep +
+                ", firmPhoneNumber='" + firmPhoneNumber + '\'' +
+                ", createdAt=" + createdAt +
+                ", createdBy='" + createdBy + '\'' +
+                ", cost=" + cost +
+                ", costInternal=" + costInternal +
+                ", currency='" + currency + '\'' +
+                ", orderPoints=" + orderPoints +
+                '}';
+    }
 }
