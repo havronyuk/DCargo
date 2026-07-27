@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import dccargo.dcargoservice.enums.MileageObjectType;
 import dccargo.dcargoservice.enums.MileageSource;
 import dccargo.dcargoservice.enums.TireStatus;
+import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.model.dcargo.TruckMileage;
 import dccargo.dcargoservice.model.dcargo.TruckTire;
 import dccargo.dcargoservice.repository.dcargo.TruckMileageRepository;
@@ -27,7 +29,8 @@ public class TireMileageCalculationService {
     @Transactional
     public void calculate(
     		TruckMileage previousTruckMileage,
-    		TruckMileage newTruckMileage
+    		TruckMileage newTruckMileage,
+    		Truck truck
     ) {
 
         if (previousTruckMileage == null) {
@@ -78,7 +81,8 @@ public class TireMileageCalculationService {
             createTireMileage(
                     tire,
                     newTruckMileage,
-                    mileageDelta
+                    mileageDelta,
+                    truck
             );
         }
     }
@@ -86,7 +90,8 @@ public class TireMileageCalculationService {
     private void createTireMileage(
             TruckTire tire,
             TruckMileage truckMileage,
-            int mileageDelta
+            int mileageDelta,
+            Truck truck
     ) {
 
         boolean alreadyCreated =
@@ -140,6 +145,30 @@ public class TireMileageCalculationService {
                         + "по пробегу автомобиля id="
                         + truckMileage.getObjectId()
         );
+        
+        /*
+         * Госномер клиент не передаёт.
+         * Получаем актуальный госномер из Truck.
+         */
+        tireMileage.setRegistrationNumber(
+                truck.getRegistrationNumber()
+        );
+
+        /*
+         * Если дата фиксации не передана,
+         * используем текущее время.
+         */
+        if (truckMileage.getMileageDate() == null) {
+        	tireMileage.setMileageDate(LocalDateTime.now());
+        }
+
+        /*
+         * Если источник не указан,
+         * считаем, что пробег внесён вручную.
+         */
+        if (truckMileage.getSource() == null) {
+        	tireMileage.setSource(MileageSource.MANUAL);
+        }
 
         truckMileageRepository.save(tireMileage);
     }

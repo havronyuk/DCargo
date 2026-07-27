@@ -127,7 +127,9 @@ public class TruckMileageService {
         /*
          * Получаем последний известный пробег автомобиля
          * и проверяем, что новый пробег не меньше предыдущего.
+         * 
          */
+        
         truckMileageRepository
                 .findFirstByObjectIdOrderByMileageDateDescIdDesc(
                         truckMileage.getObjectId()
@@ -146,6 +148,7 @@ public class TruckMileageService {
                         );
                     }
                 });
+        TruckMileage lastTruckMileage = truckMileageRepository.findFirstByObjectIdOrderByMileageDateDescIdDesc(truckMileage.getObjectId()).orElse(null);
 
         /*
          * Не создаём полную копию записи
@@ -201,6 +204,9 @@ public class TruckMileageService {
          * определяют дельтву в км по пробегу машины, и брибавляет эту дельту к пробегу колеса (создаёт новую строку пробега), если это колесо стояло 
          * на машине, на момент прошлог значения пробега машины.
          */
+        System.out.println(lastTruckMileage);
+        System.out.println(savedMileage);
+        tireMileageCalculationService.calculate(lastTruckMileage, savedMileage, truck);
 
         log.info(
                 "Создана запись пробега: truckId={}, mileage={}, source={}",
