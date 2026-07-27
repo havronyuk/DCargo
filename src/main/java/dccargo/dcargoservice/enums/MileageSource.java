@@ -7,6 +7,7 @@ public enum MileageSource {
     ODOMETER("Одометр"),
     SERVICE("Техническое обслуживание"),
     IMPORT("Импорт"),
+    AUTO("Рассчитан"),
     API("Внешняя система");
 
     private final String description;

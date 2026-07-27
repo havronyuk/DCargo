@@ -70,7 +70,7 @@ public class TruckDTOService {
 
         List<TruckMileage> mileageHistory =
                 truckMileageRepository
-                        .findByTruckIdOrderByMileageDateDesc(
+                        .findByObjectIdOrderByMileageDateDesc(
                                 truckId,
                                 PageRequest.of(0, 5)
                         );
@@ -117,7 +117,7 @@ public class TruckDTOService {
                 truckTireRepository.findAllByTruckIdIn(truckIds);
 
         List<TruckMileage> mileageHistory =
-                truckMileageRepository.findAllByTruckIdIn(truckIds);
+                truckMileageRepository.findAllByObjectIdIn(truckIds);
 
         Map<Long, List<TruckDocument>> documentsByTruck =
                 documents.stream()
@@ -140,7 +140,7 @@ public class TruckDTOService {
         Map<Long, List<TruckMileage>> mileageByTruck =
                 mileageHistory.stream()
                         .collect(Collectors.groupingBy(
-                                TruckMileage::getTruckId
+                                TruckMileage::getObjectId
                         ));
 
         /*

@@ -2,6 +2,7 @@ package dccargo.dcargoservice.model.dcargo;
 
 import java.time.LocalDateTime;
 
+import dccargo.dcargoservice.enums.MileageObjectType;
 import dccargo.dcargoservice.enums.MileageSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,8 +28,8 @@ public class TruckMileage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** ID транспортного средства */
-    private Long truckId;
+    /** ID объекта: Truck.id или TruckTire.id */
+    private Long objectId;
 
     /** Государственный номер транспортного средства */
     private String registrationNumber;
@@ -67,5 +68,20 @@ public class TruckMileage {
     /** Дата создания записи */
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    /** Тип объекта, которому принадлежит пробег */
+    @Enumerated(EnumType.STRING)
+    private MileageObjectType objectType;
+    
+    /**
+     * Родительская запись, на основании которой
+     * был рассчитан пробег.
+     *
+     * Для колеса — ID новой записи пробега автомобиля.
+     */
+    private Long parentMileageId;
+    
+    /** Величина, добавленная к прошлому пробегу */
+    private Integer mileageDelta;
 
 }
