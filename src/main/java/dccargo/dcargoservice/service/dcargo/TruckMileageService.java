@@ -24,6 +24,8 @@ public class TruckMileageService {
 
     private final TruckRepository truckRepository;
     
+    private final TireMileageCalculationService tireMileageCalculationService;
+    
     /**
      * Получить все записи пробега.
      */
@@ -49,7 +51,7 @@ public class TruckMileageService {
         }
 
         return truckMileageRepository
-                .findByTruckIdOrderByMileageDateDesc(truckId);
+                .findByObjectIdOrderByMileageDateDesc(truckId);
     }
 
     /**
@@ -70,7 +72,7 @@ public class TruckMileageService {
         }
 
         return truckMileageRepository
-                .findFirstByTruckIdOrderByMileageDateDescIdDesc(truckId)
+                .findFirstByObjectIdOrderByMileageDateDescIdDesc(truckId)
                 .orElseThrow(() -> new MainServiceException(
                         "Для транспортного средства с id "
                                 + truckId
@@ -90,9 +92,15 @@ public class TruckMileageService {
             );
         }
 
-        if (truckMileage.getTruckId() == null) {
+        if (truckMileage.getObjectId() == null) {
             throw new MainServiceException(
-                    "Не указан TruckId"
+                    "Не указан ObjectId"
+            );
+        }
+        
+        if (truckMileage.getObjectType() == null) {
+            throw new MainServiceException(
+                    "Не указан ObjectType"
             );
         }
 
@@ -109,10 +117,10 @@ public class TruckMileageService {
         }
 
         Truck truck = truckRepository
-                .findById(truckMileage.getTruckId())
+                .findById(truckMileage.getObjectId())
                 .orElseThrow(() -> new MainServiceException(
                         "Транспортное средство с id "
-                                + truckMileage.getTruckId()
+                                + truckMileage.getObjectId()
                                 + " не найдено"
                 ));
 
@@ -121,8 +129,8 @@ public class TruckMileageService {
          * и проверяем, что новый пробег не меньше предыдущего.
          */
         truckMileageRepository
-                .findFirstByTruckIdOrderByMileageDateDescIdDesc(
-                        truckMileage.getTruckId()
+                .findFirstByObjectIdOrderByMileageDateDescIdDesc(
+                        truckMileage.getObjectId()
                 )
                 .ifPresent(lastMileage -> {
 
@@ -143,8 +151,8 @@ public class TruckMileageService {
          * Не создаём полную копию записи
          * с таким же TruckId и значением пробега.
          */
-        if (truckMileageRepository.existsByTruckIdAndMileage(
-                truckMileage.getTruckId(),
+        if (truckMileageRepository.existsByObjectIdAndMileage(
+                truckMileage.getObjectId(),
                 truckMileage.getMileage())) {
 
             throw new MainServiceException(
@@ -187,10 +195,16 @@ public class TruckMileageService {
 
         TruckMileage savedMileage =
                 truckMileageRepository.save(truckMileage);
+        
+        /*
+         * TODO здесь, на этом этапе необходимо создать сервис который вытягивает все колёса, вытягивает последний пробег колёс
+         * определяют дельтву в км по пробегу машины, и брибавляет эту дельту к пробегу колеса (создаёт новую строку пробега), если это колесо стояло 
+         * на машине, на момент прошлог значения пробега машины.
+         */
 
         log.info(
                 "Создана запись пробега: truckId={}, mileage={}, source={}",
-                savedMileage.getTruckId(),
+                savedMileage.getObjectId(),
                 savedMileage.getMileage(),
                 savedMileage.getSource()
         );

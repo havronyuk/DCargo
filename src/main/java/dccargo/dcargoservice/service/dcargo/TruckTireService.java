@@ -111,11 +111,14 @@ public class TruckTireService {
             Truck truck = truckRepository.findById(truckTire.getTruckId())
                     .orElseThrow(() -> new MainServiceException(
                             "Транспортное средство не найдено"));
-
             dbTire.setTruckId(truck.getId());
             dbTire.setRegistrationNumber(truck.getRegistrationNumber());
+        }else {
+        	dbTire.setTruckId(null);
+            dbTire.setRegistrationNumber(null);
         }
-
+        
+        
         dbTire.setInventoryNumber(
                 truckTire.getInventoryNumber() != null
                         ? truckTire.getInventoryNumber()
