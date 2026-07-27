@@ -24,6 +24,8 @@ public class TruckMileageService {
 
     private final TruckRepository truckRepository;
     
+    private final TireMileageCalculationService tireMileageCalculationService;
+    
     /**
      * Получить все записи пробега.
      */
