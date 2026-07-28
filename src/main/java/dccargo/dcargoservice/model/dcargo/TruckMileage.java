@@ -15,12 +15,14 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Data
 @Entity
 @Table(name = "truck_mileage")
+@ToString
 public class TruckMileage {
 	
 	 /** Уникальный идентификатор записи */
