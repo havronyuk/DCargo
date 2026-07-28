@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dccargo.dcargoservice.enums.DriverScheduleExceptionType;
 import dccargo.dcargoservice.model.dcargo.DriverScheduleException;
+import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.repository.dcargo.DriverScheduleExceptionRepository;
 import dccargo.dcargoservice.repository.dcargo.DriverWorkScheduleRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
@@ -21,11 +22,14 @@ public class DriverScheduleExceptionService {
 	
 	private final DriverScheduleExceptionRepository exceptionRepository;
     private final DriverWorkScheduleRepository driverWorkScheduleRepository;
+    private final UserService userService;
     
     public DriverScheduleException create(
             DriverScheduleException exception
     ) {
         validate(exception);
+        
+        User user = userService.getUserById(exception.getUserId());
 
         if (exceptionRepository
                 .existsByUserIdAndExceptionDate(
@@ -34,8 +38,8 @@ public class DriverScheduleExceptionService {
                 )) {
 
             throw new MainServiceException(
-                    "Для водителя с ID "
-                            + exception.getUserId()
+                    "Для водителя "
+                            + user.getFullName()
                             + " уже существует изменение графика на дату "
                             + exception.getExceptionDate()
             );
@@ -43,7 +47,8 @@ public class DriverScheduleExceptionService {
 
         validateDriverHasSchedule(
                 exception.getUserId(),
-                exception.getExceptionDate()
+                exception.getExceptionDate(),
+                user
         );
 
         prepareFields(exception);
@@ -107,6 +112,8 @@ public class DriverScheduleExceptionService {
         }
 
         validate(existing);
+        
+        User user = userService.getUserById(existing.getUserId());
 
         if (exceptionRepository
                 .existsByUserIdAndExceptionDateAndIdNot(
@@ -116,8 +123,8 @@ public class DriverScheduleExceptionService {
                 )) {
 
             throw new MainServiceException(
-                    "Для водителя с ID "
-                            + existing.getUserId()
+                    "Для водителя "
+                            + user.getFullName()
                             + " уже существует изменение графика на дату "
                             + existing.getExceptionDate()
             );
@@ -125,7 +132,8 @@ public class DriverScheduleExceptionService {
 
         validateDriverHasSchedule(
                 existing.getUserId(),
-                existing.getExceptionDate()
+                existing.getExceptionDate(),
+                user
         );
 
         prepareFields(existing);
@@ -281,7 +289,8 @@ public class DriverScheduleExceptionService {
 
     private void validateDriverHasSchedule(
             Long userId,
-            LocalDate date
+            LocalDate date,
+            User user
     ) {
         boolean hasSchedule =
                 !driverWorkScheduleRepository
@@ -293,8 +302,8 @@ public class DriverScheduleExceptionService {
 
         if (!hasSchedule) {
             throw new MainServiceException(
-                    "У водителя с ID "
-                            + userId
+                    "У водителя "
+                            + user.getFullName()
                             + " нет активного графика на дату "
                             + date
             );
