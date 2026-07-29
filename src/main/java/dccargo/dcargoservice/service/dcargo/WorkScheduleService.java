@@ -1,9 +1,10 @@
-package dccargo.dcargoservice.model.dcargo;
+package dccargo.dcargoservice.service.dcargo;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import dccargo.dcargoservice.model.dcargo.WorkSchedule;
 import dccargo.dcargoservice.repository.dcargo.WorkScheduleRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import jakarta.transaction.Transactional;
