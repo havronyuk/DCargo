@@ -18,7 +18,6 @@ import dccargo.dcargoservice.enums.DriverScheduleExceptionType;
 import dccargo.dcargoservice.model.dcargo.DriverScheduleException;
 import dccargo.dcargoservice.model.dcargo.DriverWorkSchedule;
 import dccargo.dcargoservice.model.dcargo.WorkSchedule;
-import dccargo.dcargoservice.model.dcargo.WorkScheduleService;
 import dccargo.dcargoservice.repository.dcargo.DriverScheduleExceptionRepository;
 import dccargo.dcargoservice.repository.dcargo.DriverWorkScheduleRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;

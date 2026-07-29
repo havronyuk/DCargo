@@ -20,9 +20,9 @@ import dccargo.dcargoservice.dto.dcargo.DriverWorkDayDTO;
 import dccargo.dcargoservice.model.dcargo.DriverScheduleException;
 import dccargo.dcargoservice.model.dcargo.DriverWorkSchedule;
 import dccargo.dcargoservice.model.dcargo.WorkSchedule;
-import dccargo.dcargoservice.model.dcargo.WorkScheduleService;
 import dccargo.dcargoservice.service.dcargo.DriverScheduleExceptionService;
 import dccargo.dcargoservice.service.dcargo.DriverWorkScheduleService;
+import dccargo.dcargoservice.service.dcargo.WorkScheduleService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
