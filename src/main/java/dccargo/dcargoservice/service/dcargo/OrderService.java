@@ -4,6 +4,7 @@ package dccargo.dcargoservice.service.dcargo;
 import dccargo.dcargoservice.model.dcargo.Order;
 import dccargo.dcargoservice.model.dcargo.OrderPoint;
 import dccargo.dcargoservice.repository.dcargo.OrderRepository;
+import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -54,6 +56,8 @@ public class OrderService {
         orderDB.setMaxWeigth(order.getMaxWeigth());
         orderDB.setMaxPall(order.getMaxPall());
         orderDB.setIsKep(order.getIsKep());
+        orderDB.setIsInternalOrder(order.getIsInternalOrder());
+
 
         // Обновляем OrderPoints
         updateOrderPoints(orderDB, order.getOrderPoints());
@@ -144,4 +148,119 @@ public class OrderService {
         return orderRepository.findAllByDeliveryDateAndTypeSklad(deliveryDate,typeSklad);
 
     }
+
+    public Order updateOrder(Order order) {
+
+        if(order.getIdOrder() == null){
+            throw new MainServiceException("Отсутствует ID заказа");
+        }
+
+        Order orderDb = orderRepository.getByIdOrder(order.getIdOrder());
+
+        if(orderDb.getIdVehicleSession() != null){
+
+            if(orderDb.getIsInternalOrder() && !order.getIsInternalOrder()){
+                throw new MainServiceException("Нельзя убрать метку о внутреннем заказе");
+            }
+
+            if(order.getIdVehicleSession() == null){
+                throw new MainServiceException("Нельзя убрать связь с отгрузкой");
+            }
+
+            if(!orderDb.getMaxPall().equals(order.getMaxPall())){
+                throw new MainServiceException("Нельзя изменить максимальное количество паллет");
+            }
+
+            if(!orderDb.getMaxWeigth().equals(order.getMaxWeigth())){
+                throw new MainServiceException("Нельзя изменить максимальный вес");
+            }
+
+            if(!orderDb.getTargetPall().equals(order.getTargetPall())){
+                throw new MainServiceException("Нельзя изменить целевое количество паллет");
+            }
+
+            if(!orderDb.getTargetWeigth().equals(order.getTargetWeigth())){
+                throw new MainServiceException("Нельзя изменить целевой вес");
+            }
+
+            if(!orderDb.getTypeSklad().equals(order.getTypeSklad())){
+                throw new MainServiceException("Нельзя изменить тип склада");
+            }
+
+            if(!orderDb.getDeliveryDate().equals(order.getDeliveryDate())){
+                throw new MainServiceException("Нельзя изменить дату доставки");
+            }
+
+            if(!orderDb.getShipmentPlanDate().equals(order.getShipmentPlanDate())){
+                throw new MainServiceException("Нельзя изменить плановую дату отгрузки");
+            }
+
+            if(!orderDb.getIsCrossDock().equals(order.getIsCrossDock())){
+                throw new MainServiceException("Нельзя изменить признак CrossDock");
+            }
+
+            if(!orderDb.getIsKep().equals(order.getIsKep())){
+                throw new MainServiceException("Нельзя изменить признак КЭП");
+            }
+
+            if (!isSamePoints(orderDb.getOrderPoints(), order.getOrderPoints())) {
+                throw new MainServiceException("Нельзя изменять точки у внутреннего заказа");
+            }
+
+        }
+
+
+        orderDb.setFirmName(order.getFirmName());
+        orderDb.setStatus(order.getStatus());
+        orderDb.setFirmPhoneNumber(order.getFirmPhoneNumber());
+        orderDb.setCost(order.getCost());
+        orderDb.setCostInternal(order.getCostInternal());
+        orderDb.setCurrency(order.getCurrency());
+
+
+        orderRepository.save(orderDb);
+
+        ///добавить отправку на шипмент;
+
+
+        return orderDb;
+    }
+
+    private boolean isSamePoints(List<OrderPoint> list1, List<OrderPoint> list2) {
+        if (list1 == null && list2 == null) return true;
+        if (list1 == null || list2 == null) return false;
+        if (list1.size() != list2.size()) return false;
+
+        // Сортируем по ID, чтобы порядок не влиял
+        List<OrderPoint> sorted1 = list1.stream()
+                .sorted(Comparator.comparing(OrderPoint::getIdOrderPoint))
+                .collect(Collectors.toList());
+        List<OrderPoint> sorted2 = list2.stream()
+                .sorted(Comparator.comparing(OrderPoint::getIdOrderPoint))
+                .collect(Collectors.toList());
+
+        return sorted1.equals(sorted2);
+    }
+
+    public Order createExternalOrder(Order order) {
+        if(order.getIdOrder() !=null){
+            throw new MainServiceException("Нельзя создать существующий заказ");
+        }
+
+        if(order.getIdVehicleSession() != null){
+            throw new MainServiceException("ID отгрузки не может присутствовать");
+        }
+
+        if(order.getIsInternalOrder()){
+            throw new MainServiceException("Заказ не может быть внутренним");
+        }
+
+        orderRepository.save(order);
+
+        return order;
+
+    }
+
+
+
 }
