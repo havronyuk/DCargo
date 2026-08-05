@@ -96,6 +96,14 @@ public class Order {
     @Column(name = "is_kep")
     private Boolean isKep;
 
+
+    /**
+     * Внутренний маршрут
+     */
+    @Column(name = "is_internal_order")
+    private Boolean isInternalOrder;
+
+
     /**
      * Номер телефона фирмы перевозчика
      */

@@ -116,4 +116,8 @@ public class UserService {
     public User getUserById(Long idUser) {
         return userRepository.findByIdUser(idUser).orElseThrow(() -> new MainServiceException("Пользователь c ID " + idUser + " не обнаружен"));
     }
+
+    public List<User> getAllActiveUsers() {
+        return userRepository.findAllByBlockIsFalse();
+    }
 }

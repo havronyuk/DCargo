@@ -35,6 +35,12 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/getAllActiveUsers")
+    public ResponseEntity<List<User>> getAllActiveUsers() {
+        List<User> users = userService.getAllActiveUsers();
+        return ResponseEntity.ok(users);
+    }
+
 
     @PostMapping("/createUser")
     public ResponseEntity<User> create(@RequestBody User user) {

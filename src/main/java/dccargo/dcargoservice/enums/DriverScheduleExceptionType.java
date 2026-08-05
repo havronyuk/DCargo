@@ -1,6 +1,6 @@
 package dccargo.dcargoservice.enums;
 
-public enum DriverScheduleExceptionType {
+public enum  DriverScheduleExceptionType {
 	
 	WORKING("Рабочий день"),
     DAY_OFF("Выходной день"),

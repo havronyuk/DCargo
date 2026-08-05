@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "files")
-public class FIleCustom {
+public class FileCustom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,5 +72,8 @@ public class FIleCustom {
         
     @Column(name = "id_object")
     private Long idObject;  
-    
+
+    @Column(name = "from_system")
+    private String fromSystem;
+
 }
