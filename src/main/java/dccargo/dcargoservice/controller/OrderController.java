@@ -53,29 +53,29 @@ public class OrderController {
         return ResponseEntity.ok(savedOrder);
     }
 
-    @PostMapping("/createOrderTruckAssigment")
-    public ResponseEntity<Order> createExternalOrder(@RequestBody Long idTruck,@RequestBody Long idOrder) {
+//    @PostMapping("/createOrderTruckAssigment")
+//    public ResponseEntity<Order> createExternalOrder(@RequestBody Long idTruck,@RequestBody Long idOrder) {
+//
+//        OrderTruck savedOrderTruck = orderService.createExternalOrder(order);
+//
+//        return ResponseEntity.ok(savedOrder);
+//    }
 
-        OrderTruck savedOrderTruck = orderService.createExternalOrder(order);
+//    @PostMapping("/updateOrderTruckAssigment")
+//    public ResponseEntity<Order> createExternalOrder(@RequestBody Long idTruck,@RequestBody Long idOrder) {
+//
+//        OrderTruck savedOrderTruck = orderService.createExternalOrder(order);
+//
+//        return ResponseEntity.ok(savedOrder);
+//    }
 
-        return ResponseEntity.ok(savedOrder);
-    }
-
-    @PostMapping("/updateOrderTruckAssigment")
-    public ResponseEntity<Order> createExternalOrder(@RequestBody Long idTruck,@RequestBody Long idOrder) {
-
-        OrderTruck savedOrderTruck = orderService.createExternalOrder(order);
-
-        return ResponseEntity.ok(savedOrder);
-    }
-
-    @PostMapping("/deleteOrderTruckAssigment")
-    public ResponseEntity<Order> createExternalOrder(@RequestBody Long idTruck,@RequestBody Long idOrder) {
-
-        OrderTruck savedOrderTruck = orderService.createExternalOrder(order);
-
-        return ResponseEntity.ok(savedOrder);
-    }
+//    @PostMapping("/deleteOrderTruckAssigment")
+//    public ResponseEntity<Order> deleteOrderTruckAssigment(@RequestBody Long idTruck,@RequestBody Long idOrder) {
+//
+//        OrderTruck savedOrderTruck = orderService.deleteOrderTruckAssigment(order);
+//
+//        return ResponseEntity.ok(savedOrder);
+//    }
 
 
 }
