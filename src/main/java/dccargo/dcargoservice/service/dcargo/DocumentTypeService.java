@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 import dccargo.dcargoservice.model.dcargo.DocumentType;
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DocumentTypeService {
 	
 	private final DocumentTypeRepository documentTypeRepository;
+
+    private final SecurityUtils securityUtils;
 	
 	public List<DocumentType> getAll() {		
 		return documentTypeRepository.findAll();		
@@ -45,9 +48,10 @@ public class DocumentTypeService {
 	    }
 
 	    documentType.setCreatedAt(LocalDateTime.now());
+        documentType.setFromSystem("Yard");
+        documentType.setCreatedByUserId(securityUtils.getCurrentUserId());
+        documentType.setCreatedByUserName(securityUtils.getCurrentUsername());
 
-	    // TODO: После внедрения авторизации
-	    // documentType.setCreatedByUserId(SecurityUtils.getCurrentUserId());
 
 	    return documentTypeRepository.save(documentType);
 	}

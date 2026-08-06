@@ -128,10 +128,33 @@ public class TruckEquipment {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+
+
     /**
      * Дата изменения.
      */
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+
+    /**
+     * Логин пользователя создавшего запись.
+     */
+    @Column(name = "created_by_user_name")
+    private String createdByUserName;
+
+    /**
+     * ID пользователя создавшего запись.
+     */
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
+    /**
+     * Из какой системы создалась запись.
+     */
+    @Column(name = "from_system")
+    private String fromSystem;
+
+
 
 }

@@ -60,4 +60,19 @@ public class EquipmentType {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+
+    /**
+     * Каким логином создана запись.
+     */
+    @Column(name = "created_by_user_name")
+    private String createdByUserName;
+
+    /**
+     * В какой системе создана запись.
+     */
+    @Column(name = "from_system")
+    private String fromSystem;
+
+
+
 }

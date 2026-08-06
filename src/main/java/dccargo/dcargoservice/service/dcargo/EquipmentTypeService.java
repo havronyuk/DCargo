@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 import dccargo.dcargoservice.model.dcargo.EquipmentType;
@@ -17,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 public class EquipmentTypeService {
 
     private final EquipmentTypeRepository equipmentTypeRepository;
+
+    private final SecurityUtils securityUtils;
+
 
     /**
      * Получить все типы оборудования.
@@ -48,9 +52,10 @@ public class EquipmentTypeService {
 
         equipmentType.setCreatedAt(LocalDateTime.now());
         equipmentType.setActive(true);
+        equipmentType.setCreatedByUserId(securityUtils.getCurrentUserId());
+        equipmentType.setCreatedByUserName(securityUtils.getCurrentUsername());
+        equipmentType.setFromSystem("Yard");
 
-        // TODO: После внедрения авторизации
-        // equipmentType.setCreatedByUserId(SecurityUtils.getCurrentUserId());
 
         return equipmentTypeRepository.save(equipmentType);
     }

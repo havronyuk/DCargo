@@ -5,11 +5,13 @@ import dccargo.dcargoservice.model.dcargo.DriverCard;
 import dccargo.dcargoservice.model.dcargo.Passport;
 import dccargo.dcargoservice.repository.dcargo.DriverCardRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
+import dccargo.dcargoservice.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ import java.util.Map;
 public class DriverCardService {
 
     private final DriverCardRepository driverCardRepository;
+
+    private final SecurityUtils securityUtils;
 
     public DriverCard create(DriverCard driverCard) {
 
@@ -41,8 +45,11 @@ public class DriverCardService {
         if(driverCardRepository.existsByNumber(driverCard.getNumber())){
             throw new MainServiceException("Водительское удостоверение с данным номером уже существует");
         }
-        
-        //TODO Лёша, добавь потом добавление кто создал этот объект 
+
+        driverCard.setCreatedAt(LocalDateTime.now());
+        driverCard.setCreatedByUserId(securityUtils.getCurrentUserId());
+        driverCard.setCreatedByUserName(securityUtils.getCurrentUsername());
+        driverCard.setFromSystem("Yard");
 
         return driverCardRepository.save(driverCard);
     }

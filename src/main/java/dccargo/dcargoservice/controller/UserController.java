@@ -3,10 +3,12 @@ package dccargo.dcargoservice.controller;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.service.dcargo.UserService;
+import dccargo.dcargoservice.util.SecurityUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +23,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final SecurityUtils securityUtils;
 
 
     @GetMapping("/getUserById")
@@ -31,6 +34,9 @@ public class UserController {
 
     @GetMapping("/getAllUsers")
     public ResponseEntity<List<User>> getAllUsers() {
+        System.out.println(securityUtils.getCurrentUserId());
+        // equipmentType.setCreatedByUserId(SecurityUtils.getCurrentUserId());
+
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }

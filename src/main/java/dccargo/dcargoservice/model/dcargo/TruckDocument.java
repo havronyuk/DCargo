@@ -109,4 +109,25 @@ public class TruckDocument {
      */
     @Column(name = "document_type_name", nullable = false, length = 100)
     private String documentTypeName;
+
+
+    /**
+     * Кто создал запись.
+     */
+    private Long createdByUserId;
+
+
+    /**
+     * Каким логином создана запись.
+     */
+    @Column(name = "created_by_user_name")
+    private String createdByUserName;
+
+    /**
+     * В какой системе создана запись.
+     */
+    @Column(name = "from_system")
+    private String fromSystem;
+
+
 }

@@ -1,10 +1,12 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.config.SecurityConfig;
 import dccargo.dcargoservice.enums.TruckStatus;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.repository.dcargo.TruckRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
+import dccargo.dcargoservice.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TruckService {
 
     private final TruckRepository truckRepository;
+
+    private final SecurityUtils securityUtils;
     
     public List<Truck> getAllTruck() {
 		return truckRepository.findAll();		
@@ -67,8 +71,12 @@ public class TruckService {
         }
     	
     	truck.setCreatedAt(LocalDateTime.now());  
-    	truck.setStatus(TruckStatus.INACTIVE);  
-    	//TODO потом добавить userCreate
+    	truck.setStatus(TruckStatus.INACTIVE);
+
+        truck.setFromSystem("Yard");
+        truck.setCreatedByUserId(securityUtils.getCurrentUserId());
+        truck.setCreatedByUserName(securityUtils.getCurrentUsername());
+
     	return truckRepository.save(truck);
 	}
     
