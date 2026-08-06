@@ -93,5 +93,15 @@ public class Truck {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_by_user_name")
+    private String createdByUserName;
+
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
+    @Column(name = "from_system")
+    private String fromSystem;
+
+
 
 }

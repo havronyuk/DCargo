@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class TruckEquipmentService {
 
     private final TruckEquipmentRepository truckEquipmentRepository;
     private final EquipmentTypeService equipmentTypeService;
+    private final SecurityUtils securityUtils;
     
     private final TruckRepository truckRepository;
 
@@ -87,8 +89,11 @@ public class TruckEquipmentService {
         truckEquipment.setCreatedAt(LocalDateTime.now());
         truckEquipment.setStatus(TruckEquipmentStatus.ACTIVE);
         
-        // TODO дальше добавить подтягивание mileageStartId и  mileageStartValue и 
-      //TODO добавить юзера и фиксацию объекта пробега
+        // TODO дальше добавить подтягивание mileageStartId и  mileageStartValue и
+
+        truckEquipment.setFromSystem("Yard");
+        truckEquipment.setCreatedByUserId(securityUtils.getCurrentUserId());
+        truckEquipment.setCreatedByUserName(securityUtils.getCurrentUsername());
 
         return truckEquipmentRepository.save(truckEquipment);
     }

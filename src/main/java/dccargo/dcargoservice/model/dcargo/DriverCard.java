@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -37,6 +38,32 @@ public class DriverCard {
 
     @Column(name = "block", nullable = false)
     private Boolean block = false;
+
+    /**
+     * Кто создал запись.
+     */
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
+    /**
+     * Когда создана запись.
+     */
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    /**
+     * Каким логином создана запись.
+     */
+    @Column(name = "created_by_user_name")
+    private String createdByUserName;
+
+    /**
+     * В какой системе создана запись.
+     */
+    @Column(name = "from_system")
+    private String fromSystem;
+
+
 
 
 }

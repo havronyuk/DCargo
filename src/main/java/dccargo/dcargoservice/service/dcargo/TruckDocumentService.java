@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,8 @@ public class TruckDocumentService {
 	private final TruckDocumentRepository truckDocumentRepository;
 	
 	private final DocumentTypeRepository documentTypeRepository;
+
+    private final SecurityUtils securityUtils;
 	
 	public List<TruckDocument> getTechnicalInspectionByIdTruck(Long id) {
 		return truckDocumentRepository.findAllByTruckIdOrderByInspectionDateDesc(id).stream().toList();		
@@ -95,8 +98,12 @@ public class TruckDocumentService {
 
         truckDocument.setCreatedAt(LocalDateTime.now());
         truckDocument.setStatus(TechnicalInspectionStatus.ACTIVE);
-        
-        //TODO добавить юзера и фиксацию объекта пробега
+        truckDocument.setCreatedByUserId(securityUtils.getCurrentUserId());
+        truckDocument.setCreatedByUserName(securityUtils.getCurrentUsername());
+        truckDocument.setFromSystem("Yard");
+
+
+        //TODO  фиксацию объекта пробега
 
         return truckDocumentRepository.save(truckDocument);
     }
