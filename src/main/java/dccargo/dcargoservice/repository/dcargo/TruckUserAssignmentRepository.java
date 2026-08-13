@@ -1,10 +1,14 @@
 package dccargo.dcargoservice.repository.dcargo;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import dccargo.dcargoservice.enums.TruckUserAssignmentStatus;
@@ -101,6 +105,17 @@ public interface TruckUserAssignmentRepository extends JpaRepository<TruckUserAs
     List<TruckUserAssignment> findAllByTruckIdInAndStatus(
             Collection<Long> truckIds,
             TruckUserAssignmentStatus status
+    );
+
+    @Query("""
+    SELECT tua
+    FROM TruckUserAssignment tua
+    WHERE tua.dateFrom >= :dateFrom
+      AND tua.dateFrom < :dateTo
+""")
+    List<TruckUserAssignment> findByDateFrom(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
     );
 
 }

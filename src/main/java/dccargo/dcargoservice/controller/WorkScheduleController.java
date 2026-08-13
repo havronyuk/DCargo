@@ -331,6 +331,7 @@ public class WorkScheduleController {
     /**
      * Получить исключения автомобиля за период.
      */
+
     @GetMapping("/exception/truck/{truckId}")
     public ResponseEntity<List<DriverScheduleException>>
     getExceptionsByTruckAndPeriod(

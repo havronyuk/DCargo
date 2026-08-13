@@ -24,9 +24,7 @@ public class DriverScheduleExceptionService {
     private final DriverWorkScheduleRepository driverWorkScheduleRepository;
     private final UserService userService;
     
-    public DriverScheduleException create(
-            DriverScheduleException exception
-    ) {
+    public DriverScheduleException create(DriverScheduleException exception) {
         validate(exception);
         
         User user = userService.getUserById(exception.getUserId());
@@ -300,14 +298,14 @@ public class DriverScheduleExceptionService {
                         )
                         .isEmpty();
 
-        if (!hasSchedule) {
-            throw new MainServiceException(
-                    "У водителя "
-                            + user.getFullName()
-                            + " нет активного графика на дату "
-                            + date
-            );
-        }
+//        if (!hasSchedule) {
+//            throw new MainServiceException(
+//                    "У водителя "
+//                            + user.getFullName()
+//                            + " нет активного графика на дату "
+//                            + date
+//            );
+//        }
     }
 
     private void validatePeriod(

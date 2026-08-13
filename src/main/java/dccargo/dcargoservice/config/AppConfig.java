@@ -40,6 +40,14 @@ public class AppConfig {
     @Value("${gatewayport}")
     public String gatewayport;
 
+    @Value("${shipmentport}")
+    private Integer shipmentport;
+
+    public Integer getShipmentport() {
+        return shipmentport;
+    }
+
+
     @Value("${dcargoPort}")
     private Integer qualityport;
 

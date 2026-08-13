@@ -23,6 +23,8 @@ public interface TruckRepository extends JpaRepository<Truck, Long> {
 
     List<Truck> findByStatus(TruckStatus status);
 
+    List<Truck> findAllByIdIn(List<Long> idList);
+
     boolean existsByRegistrationNumber(String registrationNumber);
     
     boolean existsByInternalId(String internalId);
