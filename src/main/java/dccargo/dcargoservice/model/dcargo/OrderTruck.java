@@ -31,15 +31,25 @@ public class OrderTruck {
     @Column(name = "id_truck")
     private Long idTruck;
 
+    @Column(name = "id_truck_user_assigment")
+    private Long idTruckUserAssigment;
+
+    @Column(name = "id_user")
+    private Long idUser;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "created_by")
     private String createdBy;
 
+    @Column(name = "from_system")
+    private String fromSystem;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private OrderTruckAssigmentStatus status;
+
 
     @PrePersist
     public void prePersist() {

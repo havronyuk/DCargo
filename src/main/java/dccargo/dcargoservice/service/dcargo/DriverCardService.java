@@ -68,7 +68,7 @@ public class DriverCardService {
         DriverCard dbDriverCard = driverCardRepository.findByIdDriverCard(driverCard.getIdDriverCard())
                 .orElseThrow(() -> new MainServiceException("Водительское удостоверение c ID " + driverCard.getIdDriverCard() + " не обнаружено"));
 
-        if(dbDriverCard.getIdUser() != driverCard.getIdUser()){
+        if(!dbDriverCard.getIdUser().equals(driverCard.getIdUser())){
             throw new MainServiceException("Нельзя передать удостоверение на другого пользователя");
         }
 

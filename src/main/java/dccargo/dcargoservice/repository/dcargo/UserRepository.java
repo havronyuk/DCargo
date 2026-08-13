@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
 	List<User> findAllByBlockIsFalse();
 
+	List<User> findAllByIdUserIn(List<Long> idUsers);
+
     boolean existsByLoginTelephoneAndBlockIsFalse(String loginTelephone);
 
     boolean existsByIdUser(Long idUser);
