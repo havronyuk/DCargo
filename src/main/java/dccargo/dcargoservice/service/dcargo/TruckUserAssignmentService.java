@@ -136,15 +136,15 @@ public class TruckUserAssignmentService {
          * Если создаётся новое фактическое закрепление,
          * закрываем предыдущего фактического водителя машины.
          */
-        if (assignment.getAssignmentType()
-                == TruckUserAssignmentType.ACTUAL
-                && assignment.getStatus()
-                == TruckUserAssignmentStatus.ACTIVE) {
-
-            completeCurrentActualAssignment(
-                    assignment.getTruckId()
-            );
-        }
+//        if (assignment.getAssignmentType()
+//                == TruckUserAssignmentType.ACTUAL
+//                && assignment.getStatus()
+//                == TruckUserAssignmentStatus.ACTIVE) {
+//
+//            completeCurrentActualAssignment(
+//                    assignment.getTruckId()
+//            );
+//        } отключил, т.к. предполагается что можно создавать закрепление на день вперед
 
         /*
          * createdAt, updatedAt и dateFrom будут заполнены
