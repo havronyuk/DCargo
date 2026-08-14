@@ -96,17 +96,14 @@ public class TruckUserAssignmentService {
     }
 
     @Transactional
-    public TruckUserAssignment create(
-            TruckUserAssignment assignment) {
+    public TruckUserAssignment create(TruckUserAssignment assignment) {
 
         validateRequiredFields(assignment);
         validateReferences(assignment);
         validateDates(assignment.getDateFrom(), assignment.getDateTo());
 
         if (assignment.getStatus() == null) {
-            assignment.setStatus(
-                    TruckUserAssignmentStatus.ACTIVE
-            );
+            assignment.setStatus(TruckUserAssignmentStatus.ACTIVE);
         }
 
         /*
@@ -289,6 +286,7 @@ public class TruckUserAssignmentService {
 
     /**
      * Штатное завершение закрепления.
+     * Завершает с текущей датой и временем
      */
     @Transactional
     public TruckUserAssignment complete(Long id) {
@@ -311,6 +309,36 @@ public class TruckUserAssignmentService {
 
         return assignmentRepository.save(assignment);
     }
+    
+    /**
+     * Штатное завершение закрепления.
+     * @param id
+     * @param dateTime дата и время завершения
+     * @return
+     */
+    @Transactional
+    public TruckUserAssignment complete(Long id, LocalDateTime dateTime) {
+    	
+    	TruckUserAssignment assignment = getById(id);
+    	
+    	if (assignment.getStatus()
+    			!= TruckUserAssignmentStatus.ACTIVE) {
+    		
+    		throw new MainServiceException(
+    				"Закрепление уже не является активным"
+    				);
+    	}
+    	
+    	assignment.setStatus(
+    			TruckUserAssignmentStatus.COMPLETED
+    			);
+    	
+    	assignment.setDateTo(dateTime);
+    	
+    	return assignmentRepository.save(assignment);
+    }
+    
+    
 
     /**
      * Отмена закрепления.
