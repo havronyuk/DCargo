@@ -24,6 +24,7 @@ import dccargo.dcargoservice.service.dcargo.TruckUserAssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -455,12 +456,13 @@ public class TruckController {
     /**
      * Штатно завершить закрепление.
      */
-    @GetMapping("/completeTruckUserAssignment/{id}")
+    @GetMapping("/completeTruckUserAssignment/{id}&{dateTime}")
     public ResponseEntity<TruckUserAssignment> complete(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @PathVariable LocalDateTime dateTime) {
 
         return ResponseEntity.ok(
-                assignmentService.complete(id)
+                assignmentService.complete(id, dateTime)
         );
     }
 
