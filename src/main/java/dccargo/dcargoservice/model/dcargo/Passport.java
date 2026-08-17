@@ -42,4 +42,7 @@ public class Passport {
     @Column(name = "block", nullable = false)
     private Boolean block = false;
 
+    @Column(name = "type")
+    private String type;
+
 }

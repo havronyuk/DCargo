@@ -26,7 +26,7 @@ public class Truck {
     @Column(name = "internal_id")
     private String internalId;
 
-    @Column(name = "internal_number", nullable = false)
+    @Column(name = "internal_number")
     private String internalNumber;
 
     @Column(name = "garage_number")

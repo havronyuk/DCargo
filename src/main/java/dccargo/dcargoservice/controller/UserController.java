@@ -1,18 +1,17 @@
 package dccargo.dcargoservice.controller;
 
-import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.model.dcargo.User;
+import dccargo.dcargoservice.model.dcargo.UserDocType;
+import dccargo.dcargoservice.model.dcargo.UserDocument;
+import dccargo.dcargoservice.service.dcargo.UserDocTypeService;
+import dccargo.dcargoservice.service.dcargo.UserDocumentService;
 import dccargo.dcargoservice.service.dcargo.UserService;
 import dccargo.dcargoservice.util.SecurityUtils;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserDocTypeService userDocTypeService;
+    private final UserDocumentService userDocumentService;
     private final SecurityUtils securityUtils;
 
 
@@ -75,6 +76,49 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
+    }
+
+    /*
+     * =============ТИПЫ ДОКУМЕНТОВ ПОЛЬЗОВАТЕЛЕЙ=================
+     */
+    @GetMapping("/getAllUserDocType")
+    public ResponseEntity<List<UserDocType>> getAllUserDocType() {
+        return ResponseEntity.ok(userDocTypeService.getAll());
+    }
+
+    @PostMapping("/createUserDocType")
+    public ResponseEntity<UserDocType> createUserDocType(@RequestBody UserDocType userDocType) {
+        log.info("Создание типа документа пользователя.");
+        UserDocType saved = userDocTypeService.create(userDocType);
+        return ResponseEntity.ok(saved);
+    }
+
+    /*
+     * =============ДОКУМЕНТЫ ПОЛЬЗОВАТЕЛЕЙ=================
+     */
+    @GetMapping("/getUserDocument/{userId}")
+    public ResponseEntity<List<UserDocument>> getUserDocument(@PathVariable Long userId) {
+        List<UserDocument> documents = userDocumentService.getByUserId(userId);
+        return ResponseEntity.ok(documents);
+    }
+
+    @GetMapping("/getAllUserDocument")
+    public ResponseEntity<List<UserDocument>> getAllUserDocument() {
+        return ResponseEntity.ok(userDocumentService.getAll());
+    }
+
+    @PostMapping("/createUserDocument")
+    public ResponseEntity<UserDocument> createUserDocument(@RequestBody UserDocument userDocument) {
+        log.info("Создание документа пользователя. UserId: {}", userDocument.getUserId());
+        UserDocument saved = userDocumentService.create(userDocument);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/updateUserDocument")
+    public ResponseEntity<UserDocument> updateUserDocument(@RequestBody UserDocument userDocument) {
+        log.info("Обновление документа пользователя. ID: {}", userDocument.getId());
+        UserDocument updated = userDocumentService.update(userDocument);
+        return ResponseEntity.ok(updated);
     }
 
 }
