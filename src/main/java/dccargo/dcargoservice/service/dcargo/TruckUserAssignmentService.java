@@ -114,20 +114,20 @@ public class TruckUserAssignmentService {
          * тот же тип;
          * статус ACTIVE.
          */
-        if (assignment.getStatus()
-                == TruckUserAssignmentStatus.ACTIVE
-                && assignmentRepository
-                .existsByTruckIdAndUserIdAndAssignmentTypeAndStatus(
-                        assignment.getTruckId(),
-                        assignment.getUserId(),
-                        assignment.getAssignmentType(),
-                        TruckUserAssignmentStatus.ACTIVE
-                )) {
-
-            throw new MainServiceException(
-                    "Такое активное закрепление уже существует"
-            );
-        }
+//        if (assignment.getStatus()
+//                == TruckUserAssignmentStatus.ACTIVE
+//                && assignmentRepository
+//                .existsByTruckIdAndUserIdAndAssignmentTypeAndStatus(
+//                        assignment.getTruckId(),
+//                        assignment.getUserId(),
+//                        assignment.getAssignmentType(),
+//                        TruckUserAssignmentStatus.ACTIVE
+//                )) {
+//
+//            throw new MainServiceException(
+//                    "Такое активное закрепление уже существует"
+//            );
+//        }
 
         /*
          * Если создаётся новое фактическое закрепление,
@@ -205,20 +205,20 @@ public class TruckUserAssignmentService {
             validateUserId(assignment.getCreatedByUserId());
         }
 
-        if (resultStatus == TruckUserAssignmentStatus.ACTIVE
-                && assignmentRepository
-                .existsByTruckIdAndUserIdAndAssignmentTypeAndStatusAndIdNot(
-                        resultTruckId,
-                        resultUserId,
-                        resultType,
-                        TruckUserAssignmentStatus.ACTIVE,
-                        assignment.getId()
-                )) {
-
-            throw new MainServiceException(
-                    "Такое активное закрепление уже существует"
-            );
-        }
+//        if (resultStatus == TruckUserAssignmentStatus.ACTIVE
+//                && assignmentRepository
+//                .existsByTruckIdAndUserIdAndAssignmentTypeAndStatusAndIdNot(
+//                        resultTruckId,
+//                        resultUserId,
+//                        resultType,
+//                        TruckUserAssignmentStatus.ACTIVE,
+//                        assignment.getId()
+//                )) {
+//
+//            throw new MainServiceException(
+//                    "Такое активное закрепление уже существует"
+//            );
+//        }
 
         /*
          * Если запись становится активной фактической,

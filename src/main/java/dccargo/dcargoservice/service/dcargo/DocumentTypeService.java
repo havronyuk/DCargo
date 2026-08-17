@@ -53,6 +53,7 @@ public class DocumentTypeService {
         documentType.setCreatedByUserName(securityUtils.getCurrentUsername());
 
 
+
 	    return documentTypeRepository.save(documentType);
 	}
 	

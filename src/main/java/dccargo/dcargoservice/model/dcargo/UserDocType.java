@@ -15,15 +15,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "document_type")
+@Table(name = "user_doc_type")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DocumentType {
-	
-	@Id
+public class UserDocType {
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -64,13 +63,12 @@ public class DocumentType {
     @Column(name = "created_by_user_name")
     private String createdByUserName;
 
-    /**
-     * В какой системе создана запись.
-     */
-    @Column(name = "from_system")
-    private String fromSystem;
-
-    @Column(name = "document_type")
-    private String documentType;
 
 }
+
+
+
+
+
+
+
