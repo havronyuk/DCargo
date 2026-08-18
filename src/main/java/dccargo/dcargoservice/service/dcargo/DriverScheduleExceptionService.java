@@ -270,11 +270,6 @@ public class DriverScheduleExceptionService {
     private void prepareFields(
             DriverScheduleException exception
     ) {
-        if (exception.getExceptionType()
-                != DriverScheduleExceptionType.REPLACEMENT) {
-
-            exception.setReplacementUserId(null);
-        }
 
         if (exception.getComment() != null) {
             String comment = exception.getComment().trim();
