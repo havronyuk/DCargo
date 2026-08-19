@@ -91,11 +91,17 @@ public class WorkScheduleController {
      * Удалить шаблон графика.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWorkSchedule(
-            @PathVariable Long id
-    ) {
+    public ResponseEntity<Void> deleteWorkSchedule(@PathVariable Long id) {
         workScheduleService.delete(id);
-
+        return ResponseEntity.noContent().build();
+    }
+    
+    /**
+     * Удалить сам график.
+     */
+    @DeleteMapping("/driverWorkSchedule/{id}")
+    public ResponseEntity<Void> deleteDriverWorkSchedule(@PathVariable Long id) {
+        driverWorkScheduleService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
