@@ -112,10 +112,14 @@ public interface TruckUserAssignmentRepository extends JpaRepository<TruckUserAs
     FROM TruckUserAssignment tua
     WHERE tua.dateFrom >= :dateFrom
       AND tua.dateFrom < :dateTo
+      and tua.status = :status
+      and tua.assignmentType = :type
 """)
     List<TruckUserAssignment> findByDateFrom(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            @Param("status") TruckUserAssignmentStatus status,
+            @Param("type") TruckUserAssignmentType type
     );
 
 }

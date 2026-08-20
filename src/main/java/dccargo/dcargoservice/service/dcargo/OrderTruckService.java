@@ -34,25 +34,31 @@ public class OrderTruckService {
 
     }
 
-        public OrderTruck assignTruckUserToOrder(Long idOrder, Long idTruck, Long idUser, String userAdd, Long idTruckUserAssigment) {
+    public OrderTruck assignTruckUserToOrder(Long idOrder, Long idTruck, Long idUser, String userAdd, Long idTruckUserAssigment) {
 
-        List<OrderTruck> existAssigments = orderTruckRepository.findByIdOrderAndStatus(idOrder, OrderTruckAssigmentStatus.ACTIVE);
+        // 1. Находим активные назначения
+        List<OrderTruck> activeAssignments = orderTruckRepository.findByIdOrderAndStatus(idOrder, OrderTruckAssigmentStatus.ACTIVE);
 
-        if(!existAssigments.isEmpty()){
-            OrderTruck orderTruck = new OrderTruck();
-            orderTruck.setIdOrder(idOrder);
-            orderTruck.setIdTruck(idTruck);
-            orderTruck.setCreatedAt(LocalDateTime.now());
-            orderTruck.setFromSystem("Yard");
-            orderTruck.setStatus(OrderTruckAssigmentStatus.ACTIVE);
-            orderTruck.setIdUser(idUser);
-            orderTruck.setCreatedBy(userAdd);
-            orderTruck.setIdTruckUserAssigment(idTruckUserAssigment);
-
+        // 2. Закрываем старые активные назначения
+        if (!activeAssignments.isEmpty()) {
+            activeAssignments.forEach(item -> {
+                item.setStatus(OrderTruckAssigmentStatus.REASSIGNED);
+            });
+            orderTruckRepository.saveAll(activeAssignments);
         }
 
+        // 3. Создаем новое назначение
+        OrderTruck newAssignment = new OrderTruck();
+        newAssignment.setIdOrder(idOrder);
+        newAssignment.setIdTruck(idTruck);
+        newAssignment.setIdUser(idUser);
+        newAssignment.setIdTruckUserAssigment(idTruckUserAssigment);
+        newAssignment.setStatus(OrderTruckAssigmentStatus.ACTIVE);
+        newAssignment.setFromSystem("Yard");
+        newAssignment.setCreatedAt(LocalDateTime.now());
+        newAssignment.setCreatedBy(userAdd);
 
-        return null;
-
+        // 4. Сохраняем и возвращаем
+        return orderTruckRepository.save(newAssignment);
     }
 }
