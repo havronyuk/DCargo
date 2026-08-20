@@ -68,7 +68,10 @@ public class User {
 
     @Column(name = "chat_id")
     private Long chatId;
-    
+
+    @Column(name = "tab_number")
+    private Long tabNumber;
+
     public String getFullName(){
 		return surname + " " + name + " " + patronymic;    	
     }

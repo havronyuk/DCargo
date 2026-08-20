@@ -5,6 +5,7 @@ public enum OrderTruckAssigmentStatus {
     ACTIVE("Действует"),
     COMPLETED("Завершено"),
     EXPIRED("Истекло"),
+    REASSIGNED("Переназначено"),
     CANCELLED("Отменено");
 
     private final String description;

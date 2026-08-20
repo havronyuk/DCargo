@@ -3,6 +3,8 @@ package dccargo.dcargoservice.service.dcargo;
 import dccargo.dcargoservice.dto.dcargo.TruckAndUserDTO;
 import dccargo.dcargoservice.dto.dcargo.mapper.TruckAndUserDTOMapper;
 import dccargo.dcargoservice.dto.dcargo.mapper.TruckDTOMapper;
+import dccargo.dcargoservice.enums.TruckUserAssignmentStatus;
+import dccargo.dcargoservice.enums.TruckUserAssignmentType;
 import dccargo.dcargoservice.model.dcargo.Truck;
 import dccargo.dcargoservice.model.dcargo.TruckUserAssignment;
 import dccargo.dcargoservice.model.dcargo.User;
@@ -36,7 +38,9 @@ public class ExternalRequestService {
         List<TruckUserAssignment> assignments =
                 truckUserAssignmentRepository.findByDateFrom(
                         workDate.atStartOfDay(),
-                        workDate.plusDays(1).atStartOfDay()
+                        workDate.plusDays(1).atStartOfDay(),
+                        TruckUserAssignmentStatus.ACTIVE,
+                        TruckUserAssignmentType.ACTUAL
                 );
 
         if (assignments.isEmpty()) {

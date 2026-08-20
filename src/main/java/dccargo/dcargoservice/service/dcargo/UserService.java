@@ -25,13 +25,17 @@ public class UserService {
             throw new MainServiceException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
         }
 
-        if(userRepository.existsByLoginAndBlockIsFalse(user.getLogin())){
-            throw new MainServiceException("Пользователь с логином " + user.getLogin() + " уже существует");
+//        if(userRepository.existsByLoginAndBlockIsFalse(user.getLogin())){
+//            throw new MainServiceException("Пользователь с логином " + user.getLogin() + " уже существует");
+//        }
+
+        if(user.getEmail() != null){
+            if(userRepository.existsByEmailAndAndBlockIsFalse(user.getEmail())){
+                throw new MainServiceException("Пользователь с email " + user.getEmail() + " уже существует");
+            }
         }
 
-        if(userRepository.existsByEmailAndAndBlockIsFalse(user.getEmail())){
-            throw new MainServiceException("Пользователь с email " + user.getEmail() + " уже существует");
-        }
+
 
         return userRepository.save(user);
 
