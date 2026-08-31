@@ -3,15 +3,17 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.enums.OrderTruckAssigmentStatus;
+import dccargo.dcargoservice.enums.RouteSheetStatus;
+import dccargo.dcargoservice.model.dcargo.OrderTruck;
+import dccargo.dcargoservice.model.dcargo.RouteSheet;
+import dccargo.dcargoservice.repository.dcargo.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import dccargo.dcargoservice.enums.TruckUserAssignmentStatus;
 import dccargo.dcargoservice.enums.TruckUserAssignmentType;
 import dccargo.dcargoservice.model.dcargo.TruckUserAssignment;
-import dccargo.dcargoservice.repository.dcargo.TruckRepository;
-import dccargo.dcargoservice.repository.dcargo.TruckUserAssignmentRepository;
-import dccargo.dcargoservice.repository.dcargo.UserRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,10 @@ public class TruckUserAssignmentService {
     private final TruckRepository truckRepository;
 
     private final UserRepository userRepository;
+
+    private final OrderTruckRepository orderTruckRepository;
+
+    private final RouteSheetRepository routeSheetRepository;
     
     public List<TruckUserAssignment> getAll() {
         return assignmentRepository.findAll();
@@ -148,7 +154,21 @@ public class TruckUserAssignmentService {
          * в @PrePersist модели, если они не указаны.
          */
 
-        return assignmentRepository.save(assignment);
+        assignmentRepository.save(assignment);
+
+
+
+        boolean isSheetExist = routeSheetRepository.existsByIdTruckUserAssignmentAndStatus(assignment.getId(), RouteSheetStatus.ACTIVE);
+
+        if(!isSheetExist){
+            RouteSheet routeSheet = new RouteSheet();
+            routeSheet.setIdTruckUserAssignment(assignment.getId());
+            routeSheetRepository.save(routeSheet);
+        }
+
+
+
+        return assignment;
     }
 
     @Transactional
@@ -361,6 +381,29 @@ public class TruckUserAssignmentService {
         );
 
         assignment.setDateTo(LocalDateTime.now());
+
+
+        boolean isExistSheet = routeSheetRepository.existsByIdTruckUserAssignmentAndStatus(assignment.getTruckId(), RouteSheetStatus.ACTIVE);
+
+        if(isExistSheet){
+            RouteSheet routeSheet = routeSheetRepository.findByIdTruckUserAssignmentAndStatus(assignment.getId(),RouteSheetStatus.ACTIVE);
+
+            routeSheet.setStatus(RouteSheetStatus.CANCELLED);
+            routeSheet.setUpdatedAt(LocalDateTime.now());
+
+            routeSheetRepository.save(routeSheet);
+        }
+
+        boolean isExistTruckOrder = orderTruckRepository.existsByIdTruckUserAssigmentAndStatus(assignment.getId(), OrderTruckAssigmentStatus.ACTIVE);
+
+        if(isExistTruckOrder){
+            OrderTruck orderTruck = orderTruckRepository.findByIdTruckUserAssigmentAndStatus(assignment.getId(), OrderTruckAssigmentStatus.ACTIVE);
+
+            orderTruck.setStatus(OrderTruckAssigmentStatus.CANCELLED);
+
+            orderTruckRepository.save(orderTruck);
+
+        }
 
         return assignmentRepository.save(assignment);
     }

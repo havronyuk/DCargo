@@ -111,4 +111,20 @@ public class UserDocument {
     @Column(name = "from_system")
     private String fromSystem;
 
+    @Column(name = "dopog_cistern")
+    private String dopogCistern;
+
+
+    @Column(name = "dopog_not_cistern")
+    private String dopogNotCistern;
+
+    @Column(name = "international_categories")
+    private String internationalCategories;
+
+    @Column(name = "international_driver_card_number")
+    private String internationalDriverCardNumber;
+
+
+
+
 }

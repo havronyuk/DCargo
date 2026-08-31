@@ -2,8 +2,11 @@ package dccargo.dcargoservice.service.dcargo;
 
 
 import dccargo.dcargoservice.enums.OrderTruckAssigmentStatus;
+import dccargo.dcargoservice.enums.RouteSheetStatus;
 import dccargo.dcargoservice.model.dcargo.OrderTruck;
+import dccargo.dcargoservice.model.dcargo.RouteSheet;
 import dccargo.dcargoservice.repository.dcargo.OrderTruckRepository;
+import dccargo.dcargoservice.repository.dcargo.RouteSheetRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,7 @@ import java.util.List;
 public class OrderTruckService {
 
     private final OrderTruckRepository orderTruckRepository;
+    private final RouteSheetRepository routeSheetRepository;
 
 
     public OrderTruck create(OrderTruck orderTruck){
@@ -58,7 +62,24 @@ public class OrderTruckService {
         newAssignment.setCreatedAt(LocalDateTime.now());
         newAssignment.setCreatedBy(userAdd);
 
+
+        orderTruckRepository.save(newAssignment);
+
+        RouteSheet routeSheet = routeSheetRepository.findByIdTruckUserAssignmentAndStatus(idTruckUserAssigment, RouteSheetStatus.ACTIVE);
+
+        if(routeSheet == null){
+            routeSheet = new RouteSheet();
+            routeSheet.setIdTruckUserAssignment(idTruckUserAssigment);
+            routeSheet.setIdOrder(idOrder);
+
+            routeSheetRepository.save(routeSheet);
+        }else {
+            routeSheet.setIdOrder(idOrder);
+            routeSheetRepository.save(routeSheet);
+        }
+
+
         // 4. Сохраняем и возвращаем
-        return orderTruckRepository.save(newAssignment);
+        return newAssignment;
     }
 }

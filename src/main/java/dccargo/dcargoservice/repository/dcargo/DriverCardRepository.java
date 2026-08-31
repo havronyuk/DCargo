@@ -5,6 +5,7 @@ import dccargo.dcargoservice.model.dcargo.DriverCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,5 +21,7 @@ public interface DriverCardRepository  extends JpaRepository<DriverCard, Long> {
     boolean existsByIdUserAndBlock(Long idUser, Boolean block);
 
     List<DriverCard> findAllByIdUser(Long idUser);
+
+    List<DriverCard> findAllByIdUserIn(Collection<Long> userIds);
 
 }

@@ -1,9 +1,11 @@
 package dccargo.dcargoservice.controller;
 
+import dccargo.dcargoservice.dto.dcargo.UserDTO;
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.model.dcargo.UserDocType;
 import dccargo.dcargoservice.model.dcargo.UserDocument;
 import dccargo.dcargoservice.service.dcargo.UserDocTypeService;
+import dccargo.dcargoservice.service.dcargo.UserDTOService;
 import dccargo.dcargoservice.service.dcargo.UserDocumentService;
 import dccargo.dcargoservice.service.dcargo.UserService;
 import dccargo.dcargoservice.util.SecurityUtils;
@@ -24,6 +26,7 @@ public class UserController {
     private final UserService userService;
     private final UserDocTypeService userDocTypeService;
     private final UserDocumentService userDocumentService;
+    private final UserDTOService userDTOService;
     private final SecurityUtils securityUtils;
 
 
@@ -31,6 +34,24 @@ public class UserController {
     public ResponseEntity<User> getUserById(@RequestParam Long idUser){
         User user = userService.getUserById(idUser);
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Получить одного пользователя со всеми данными
+     * (паспорт, водительское удостоверение, документы, типы документов).
+     */
+    @GetMapping("/getUserById/full")
+    public ResponseEntity<UserDTO> getUserByIdFull(@RequestParam Long idUser){
+        return ResponseEntity.ok(userDTOService.getById(idUser));
+    }
+
+    /**
+     * Получить всех пользователей со всеми данными
+     * (паспорт, водительское удостоверение, документы, типы документов).
+     */
+    @GetMapping("/getAllUsers/full")
+    public ResponseEntity<List<UserDTO>> getAllUsersFull() {
+        return ResponseEntity.ok(userDTOService.getAll());
     }
 
     @GetMapping("/getAllUsers")

@@ -69,6 +69,8 @@ public class PassportService {
         dbPassport.setIssueDate(passport.getIssueDate() != null ? passport.getIssueDate() : dbPassport.getIssueDate());
         dbPassport.setExpiryDate(passport.getExpiryDate() != null ? passport.getExpiryDate() : dbPassport.getExpiryDate());
         dbPassport.setIssuedBy(passport.getIssuedBy() != null ? passport.getIssuedBy() : dbPassport.getIssuedBy());
+        dbPassport.setType(passport.getType() != null ? passport.getType() : dbPassport.getType());
+
 
         Passport updatedPassport = passportRepository.save(dbPassport);
         log.info("Обновлен паспорт. ID: {}, Серия: {}, Номер: {}",

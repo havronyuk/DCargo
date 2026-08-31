@@ -63,6 +63,8 @@ public class DriverCard {
     @Column(name = "from_system")
     private String fromSystem;
 
+    @Column(name = "type_country")
+    private String typeCountry;
 
 
 

@@ -4,6 +4,7 @@ package dccargo.dcargoservice.service.dcargo;
 import dccargo.dcargoservice.model.dcargo.Order;
 import dccargo.dcargoservice.model.dcargo.OrderPoint;
 import dccargo.dcargoservice.repository.dcargo.OrderRepository;
+import dccargo.dcargoservice.repository.dcargo.RouteSheetRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final RouteSheetRepository routeSheetRepository;
 
 
     public Order getOrderById(Long idOrder) {
@@ -63,6 +65,9 @@ public class OrderService {
         updateOrderPoints(orderDB, order.getOrderPoints());
 
         Order savedOrder = orderRepository.save(orderDB);
+
+
+
         return savedOrder;
     }
 

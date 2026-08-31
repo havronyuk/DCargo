@@ -12,4 +12,8 @@ public interface OrderTruckRepository extends JpaRepository<OrderTruck,Long> {
 
     List<OrderTruck> findByIdOrderAndStatus(Long idOrder, OrderTruckAssigmentStatus status);
 
+    boolean existsByIdTruckUserAssigmentAndStatus(Long idTruckUserAssigment, OrderTruckAssigmentStatus status);
+
+    OrderTruck findByIdTruckUserAssigmentAndStatus(Long idTruckUserAssigment,OrderTruckAssigmentStatus status);
+
 }

@@ -10,6 +10,7 @@ import dccargo.dcargoservice.model.dcargo.TruckDocument;
 import dccargo.dcargoservice.model.dcargo.TruckEquipment;
 import dccargo.dcargoservice.model.dcargo.TruckMileage;
 import dccargo.dcargoservice.model.dcargo.TruckTire;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -74,6 +75,13 @@ public class TruckDTO {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private String fuelGrade;
+
+    private String fuelCardNumber;
+
+    private Integer initialOdometerValue;
+
 
     /*
      * Текущий пробег

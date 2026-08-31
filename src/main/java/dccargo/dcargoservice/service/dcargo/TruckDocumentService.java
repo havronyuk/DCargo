@@ -67,20 +67,18 @@ public class TruckDocumentService {
             );
         }
 
-        if (truckDocument.getInspectionDate() == null) {
-            throw new MainServiceException(
-                    "Не указана дата проведения действия документа"
-            );
-        }
+//        if (truckDocument.getInspectionDate() == null) {
+//            throw new MainServiceException(
+//                    "Не указана дата проведения действия документа"
+//            );
+//        }
 
-        if (truckDocument.getValidUntil() == null) {
-            throw new MainServiceException(
-                    "Не указана дата окончания действия документа"
-            );
-        }
 
-        if (truckDocument.getValidUntil()
-                .isBefore(truckDocument.getInspectionDate().toLocalDate())) {
+        if (truckDocument.getValidUntil() != null
+                && truckDocument.getInspectionDate() != null
+                && truckDocument.getValidUntil()
+                .isBefore(truckDocument.getInspectionDate())) {
+
             throw new MainServiceException(
                     "Дата окончания действия не может быть раньше даты проведения документа"
             );
@@ -212,10 +210,22 @@ public class TruckDocumentService {
                         : dbTechnicalInspection.getComment()
         );
 
+        dbTechnicalInspection.setAddress(
+                truckDocument.getAddress() != null
+                        ? truckDocument.getAddress()
+                        : dbTechnicalInspection.getAddress()
+        );
+
+        dbTechnicalInspection.setOwner(
+                truckDocument.getOwner() != null
+                        ? truckDocument.getOwner()
+                        : dbTechnicalInspection.getOwner()
+        );
+
         if (dbTechnicalInspection.getInspectionDate() != null
                 && dbTechnicalInspection.getValidUntil() != null
                 && dbTechnicalInspection.getValidUntil()
-                        .isBefore(dbTechnicalInspection.getInspectionDate().toLocalDate())) {
+                        .isBefore(dbTechnicalInspection.getInspectionDate())) {
 
             throw new MainServiceException(
                     "Дата окончания действия не может быть раньше даты проведения документа"
