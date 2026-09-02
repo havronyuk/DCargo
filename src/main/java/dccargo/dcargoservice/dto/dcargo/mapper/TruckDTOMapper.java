@@ -51,7 +51,9 @@ public class TruckDTOMapper {
 	                .comment(truck.getComment())
 	                .createdAt(truck.getCreatedAt())
 	                .updatedAt(truck.getUpdatedAt())
-
+					.fuelGrade(truck.getFuelGrade())
+					.fuelCardNumber(truck.getFuelCardNumber())
+					.initialOdometerValue(truck.getInitialOdometerValue())
 	                .currentMileage(
 	                        currentMileage == null
 	                                ? null

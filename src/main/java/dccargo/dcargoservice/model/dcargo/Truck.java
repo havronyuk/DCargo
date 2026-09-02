@@ -102,6 +102,14 @@ public class Truck {
     @Column(name = "from_system")
     private String fromSystem;
 
+    @Column(name = "fuel_grade")
+    private String fuelGrade;
+
+    @Column(name = "fuel_card_number")
+    private String fuelCardNumber;
+
+    @Column(name = "initial_odometer_value")
+    private Integer initialOdometerValue;
 
 
 }

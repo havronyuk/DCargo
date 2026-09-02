@@ -17,6 +17,8 @@ import dccargo.dcargoservice.model.dcargo.TruckUserAssignment;
 
 @Repository
 public interface TruckUserAssignmentRepository extends JpaRepository<TruckUserAssignment, Long>{
+
+    TruckUserAssignment getById(Long id);
 	
 	/**
      * Полная история закреплений по автомобилю.
@@ -106,6 +108,18 @@ public interface TruckUserAssignmentRepository extends JpaRepository<TruckUserAs
             Collection<Long> truckIds,
             TruckUserAssignmentStatus status
     );
+
+    @Query("""
+    SELECT tua
+    FROM TruckUserAssignment tua
+    WHERE tua.dateFrom >= :dateFrom
+      AND tua.dateFrom < :dateTo
+""")
+    List<TruckUserAssignment> findByWorkDates(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
+
 
     @Query("""
     SELECT tua

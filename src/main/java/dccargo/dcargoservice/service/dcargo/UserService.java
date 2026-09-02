@@ -25,6 +25,12 @@ public class UserService {
             throw new MainServiceException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
         }
 
+        if(user.getTabNumber() != null){
+            if(userRepository.existsByTabNumberAndBlockIsFalse(user.getTabNumber())){
+                throw new MainServiceException("Пользователь с табельным " + user.getTabNumber() + " уже существует");
+            }
+        }
+
 //        if(userRepository.existsByLoginAndBlockIsFalse(user.getLogin())){
 //            throw new MainServiceException("Пользователь с логином " + user.getLogin() + " уже существует");
 //        }
@@ -72,7 +78,16 @@ public class UserService {
         dbUser.setIp(user.getIp() != null ? user.getIp() : dbUser.getIp());
         dbUser.setChatId(user.getChatId() != null ? user.getChatId() : dbUser.getChatId());
 
-        // date_create не обновляем, оставляем оригинальную дату создания
+        // Проверяем tabNumber с учетом null
+        if (user.getTabNumber() != null) {
+            if (dbUser.getTabNumber() == null || !dbUser.getTabNumber().equals(user.getTabNumber())) {
+                if (!userRepository.existsByTabNumberAndBlockIsFalse(user.getTabNumber())) {
+                    dbUser.setTabNumber(user.getTabNumber());
+                } else {
+                    throw new MainServiceException("Ошибка пользователь с табельным номером " + user.getTabNumber() + " уже существует");
+                }
+            }
+        }
 
         return userRepository.save(dbUser);
     }

@@ -78,6 +78,7 @@ public class DriverCardService {
         dbDriverCard.setIssuedBy(driverCard.getIssuedBy() != null ? driverCard.getIssuedBy() : dbDriverCard.getIssuedBy());
         dbDriverCard.setCategories(driverCard.getCategories() != null ? driverCard.getCategories() : dbDriverCard.getCategories());
         dbDriverCard.setBlock(driverCard.getBlock() != null ? driverCard.getBlock() : dbDriverCard.getBlock());
+        dbDriverCard.setTypeCountry(driverCard.getTypeCountry() != null ? driverCard.getTypeCountry() : dbDriverCard.getTypeCountry());
 
         return driverCardRepository.save(dbDriverCard);
     }

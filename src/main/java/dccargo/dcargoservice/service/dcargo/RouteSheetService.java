@@ -1,22 +1,313 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.dto.dcargo.RouteSheetInfoDTO;
+import dccargo.dcargoservice.enums.RouteSheetStatus;
+import dccargo.dcargoservice.model.dcargo.*;
+import dccargo.dcargoservice.repository.dcargo.*;
+import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class RouteSheetService {
 
+    private final RouteSheetRepository routeSheetRepository;
+    private final OrderRepository orderRepository;
+    private final TruckUserAssignmentRepository truckUserAssignmentRepository;
+    private final TruckRepository truckRepository;
+    private final UserRepository userRepository;
+    private final DriverCardRepository driverCardRepository;
+    private final RefuelingRepository refuelingRepository;
 
+    public RouteSheet create(RouteSheet routeSheet){
+        if(routeSheetRepository.existsByIdOrderAndIdTruckUserAssignment(routeSheet.getIdOrder(),routeSheet.getIdTruckUserAssignment())){
+           throw new MainServiceException("Путевой в связке с таким заказом и привязкой пользователя уже существует");
+        }
+        routeSheetRepository.save(routeSheet);
+        return routeSheet;
+    }
+
+    public RouteSheet update(RouteSheet routeSheet){
+        routeSheetRepository.save(routeSheet);
+        return routeSheet;
+    }
+
+    @Transactional
+    public RouteSheetInfoDTO updateRouteSheet(RouteSheetInfoDTO dto) {
+
+        RouteSheet routeSheet = routeSheetRepository.getById(dto.getIdRouteSheet());
+
+        if (routeSheet == null) {
+            throw new MainServiceException("Маршрутный лист с id " + dto.getIdRouteSheet() + " не найден");
+        }
+
+        if (dto.getStartOdometerValue() != null) {
+            routeSheet.setStartOdometerValue(dto.getStartOdometerValue());
+        }
+        if (dto.getEndOdometerValue() != null) {
+            routeSheet.setEndOdometerValue(dto.getEndOdometerValue());
+        }
+        if (dto.getRefWorkTime() != null) {
+            routeSheet.setRefWorkTime(dto.getRefWorkTime());
+        }
+        if (dto.getVebastoWorkTime() != null) {
+            routeSheet.setVebastWorkTime(dto.getVebastoWorkTime());
+        }
+
+        routeSheet.setUpdatedAt(LocalDateTime.now());
+
+        if (dto.getRefuelingList() != null) {
+            List<Refueling> oldRefuelings =
+                    refuelingRepository.findByIdRouteSheet(routeSheet.getIdRouteSheet());
+
+            Map<Long, Refueling> oldMap = new HashMap<>();
+            for (Refueling old : oldRefuelings) {
+                if (old.getIdRefueling() != null) {
+                    oldMap.put(old.getIdRefueling(), old);
+                }
+            }
+
+            Set<Long> incomingIds = new HashSet<>();
+
+            for (Refueling incoming : dto.getRefuelingList()) {
+                if (incoming.getIdRefueling() != null && oldMap.containsKey(incoming.getIdRefueling())) {
+                    Refueling existing = oldMap.get(incoming.getIdRefueling());
+                    existing.setFuelAmount(incoming.getFuelAmount());
+                    existing.setFuelGrade(incoming.getFuelGrade());
+                    refuelingRepository.save(existing);
+                    incomingIds.add(incoming.getIdRefueling());
+                } else {
+                    Refueling newRefueling = new Refueling();
+                    newRefueling.setIdRouteSheet(routeSheet.getIdRouteSheet());
+                    newRefueling.setFuelAmount(incoming.getFuelAmount());
+                    newRefueling.setFuelGrade(incoming.getFuelGrade());
+                    refuelingRepository.save(newRefueling);
+                }
+            }
+
+            for (Refueling old : oldRefuelings) {
+                if (!incomingIds.contains(old.getIdRefueling())) {
+                    refuelingRepository.delete(old);
+                }
+            }
+        }
+
+        routeSheetRepository.save(routeSheet);
+
+        TruckUserAssignment assignment = routeSheet.getIdTruckUserAssignment() != null
+                ? truckUserAssignmentRepository.findById(routeSheet.getIdTruckUserAssignment()).orElse(null)
+                : null;
+
+        Truck truck = (assignment != null && assignment.getTruckId() != null)
+                ? truckRepository.findById(assignment.getTruckId()).orElse(null)
+                : null;
+
+        User user = (assignment != null && assignment.getUserId() != null)
+                ? userRepository.findByIdUser(assignment.getUserId()).orElse(null)
+                : null;
+
+        DriverCard card = (user != null && user.getIdUser() != null)
+                ? driverCardRepository.findByIdUserAndBlock(user.getIdUser(), false)
+                        .orElse(new DriverCard())
+                : new DriverCard();
+
+        List<Refueling> updatedRefuelings =
+                refuelingRepository.findByIdRouteSheet(routeSheet.getIdRouteSheet());
+
+        RouteSheetInfoDTO result = mapToRouteSheetInfoDTO(assignment, truck, user, routeSheet, updatedRefuelings);
+        result.setDriverCardNumber(card.getNumber());
+
+        return result;
+    }
+
+    @Transactional
+    public Map<String, Object> generateRouteExcelBy(Long idTruckUserAssigment) throws IOException {
+
+        System.out.println("123123123123123");
+
+        RouteSheet routeSheet =
+                routeSheetRepository.findByIdTruckUserAssignment(idTruckUserAssigment);
+
+        if (routeSheet == null) {
+            return Map.of(
+                    "bytes", generateEmptyExcel(),
+                    "fileName", "Маршрутный лист.xlsx"
+            );
+        }
+
+        Order order = routeSheet.getIdOrder() != null
+                ? orderRepository.getByIdOrder(routeSheet.getIdOrder())
+                : null;
+
+        TruckUserAssignment assignment =
+                truckUserAssignmentRepository.getById(routeSheet.getIdTruckUserAssignment());
+
+        Truck truck = truckRepository.getById(assignment.getTruckId());
+        User user = userRepository.getByIdUser(assignment.getUserId());
+
+        DriverCard card = driverCardRepository
+                .findByIdUserAndBlock(user.getIdUser(), false)
+                .orElse(new DriverCard());
+
+        List<Refueling> refuelingList = refuelingRepository.findByIdRouteSheet(routeSheet.getIdRouteSheet());
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            createStyles(workbook);
+
+            Sheet sheet1 = createSheet1(workbook);
+            Sheet sheet2 = createSheet2(workbook);
+
+            fillSheet1(sheet1, order, truck, user, assignment, routeSheet, card, refuelingList);
+
+            if (order != null) {
+                fillSheet2(sheet2, order);
+            }
+
+            System.out.println("=== EXCEL ЛОГ: НАЧАЛО ===");
+            for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+                Sheet sheetLog = workbook.getSheetAt(s);
+                System.out.println("--- Лист: \"" + sheetLog.getSheetName() + "\" ---");
+                for (int r = 0; r <= sheetLog.getLastRowNum(); r++) {
+                    Row row = sheetLog.getRow(r);
+                    if (row == null) continue;
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Строка ").append(r + 1).append(": ");
+                    for (int c = 0; c < row.getLastCellNum(); c++) {
+                        Cell cell = row.getCell(c);
+                        if (cell == null) {
+                            sb.append("[пусто] | ");
+                            continue;
+                        }
+                        String val;
+                        switch (cell.getCellType()) {
+                            case STRING: val = cell.getStringCellValue(); break;
+                            case NUMERIC: val = String.valueOf(cell.getNumericCellValue()); break;
+                            case BOOLEAN: val = String.valueOf(cell.getBooleanCellValue()); break;
+                            case FORMULA: val = "[FORMULA:" + cell.getCellFormula() + "]"; break;
+                            default: val = "[" + cell.getCellType() + "]"; break;
+                        }
+                        CellReference ref = new CellReference(r, c);
+                        sb.append(ref.formatAsString()).append("=").append(val).append(" | ");
+                    }
+                    System.out.println(sb.toString());
+                }
+            }
+            System.out.println("=== EXCEL ЛОГ: КОНЕЦ ===");
+
+            workbook.write(out);
+
+            routeSheetRepository.updateLastPrintTime(
+                    routeSheet.getIdRouteSheet(),
+                    LocalDateTime.now()
+            );
+
+            return Map.of(
+                    "bytes", out.toByteArray(),
+                    "fileName", "Маршрутный лист №T" + routeSheet.getIdRouteSheet() + " " + user.getFullName() + ".xlsx"
+            );
+        }
+    }
+
+    private void fillSheet1(Sheet sheet, Order order, Truck truck, User user,
+                            TruckUserAssignment truckUserAssignment,
+                            RouteSheet routeSheet, DriverCard driverCard, List<Refueling> refuelingList) {
+        cell(sheet, "A8", truck.getBrand(), 5);
+        cell(sheet, "C8", truck.getRegistrationNumber(), 5);
+
+        cell(sheet, "B11", user.getFullName() + "\n" + driverCard.getNumber(), 5);
+        cell(sheet, "C11", user.getTabNumber(), 5);
+        cell(sheet,"H6", truckUserAssignment.getDateFrom().toLocalDate(), 5);
+        cell(sheet, "H8", truckUserAssignment.getDateTo().toLocalDate(),5);
+
+        cell(sheet, "J6", routeSheet.getStartOdometerValue(),5);
+        cell(sheet, "J8", routeSheet.getEndOdometerValue(),5);
+
+        cell(sheet, "N8", routeSheet.getRefWorkTime(),5);
+        cell(sheet, "O8", routeSheet.getVebastWorkTime(),5);
+
+
+        cell(sheet, "B5", "T"+routeSheet.getIdRouteSheet(), 5);
+
+        if (refuelingList != null) {
+
+            for (int i = 0; i < refuelingList.size(); i++) {
+
+                Refueling refueling = refuelingList.get(i);
+
+                if (i < 6) {
+                    // Первый блок: H / J / K
+                    int row = 11 + i;
+
+                    cell(sheet, "H" + row, truckUserAssignment.getDateFrom().toLocalDate(), 5);
+                    cell(sheet, "J" + row, refueling.getFuelGrade(), 5);
+                    cell(sheet, "K" + row, refueling.getFuelAmount(), 5);
+
+                } else if (i < 12) {
+                    // Второй блок: L / N / O
+                    int row = 11 + (i - 6);
+
+                    cell(sheet, "L" + row,truckUserAssignment.getDateFrom().toLocalDate(), 5);
+                    cell(sheet, "N" + row, refueling.getFuelGrade(), 5);
+                    cell(sheet, "O" + row, refueling.getFuelAmount(), 5);
+                }
+            }
+        }
+
+        // дата выезда
+//        cell(sheet, "H6", assignment.getDateFrom(), 5);
+
+        // дата возвращения
+//        cell(sheet, "H8", assignment.getDateTo(), 2);
+    }
+
+    private void fillSheet2(Sheet sheet, Order order) {
+        List<OrderPoint> orderPointList = order.getOrderPoints();
+        for (int i = 0; i < orderPointList.size(); i++) {
+            OrderPoint orderPoint = orderPointList.get(i);
+
+            cell(
+                    sheet,
+                    "E" + (i + 3),
+                    orderPoint.getTonnage() / 1000,
+                    2
+            );
+
+            cell(
+                    sheet,
+                    "D" + (i + 3),
+                    orderPoint.getWarehouseId(),
+                    2
+            );
+
+            cell(
+                    sheet,
+                    "C" + (i + 3),
+                    orderPoint.getAddress(),
+                    2
+            );
+
+        }
+    }
 
 
     public byte[] generateEmptyExcel() throws IOException {
@@ -25,6 +316,38 @@ public class RouteSheetService {
             createStyles(workbook);
             createSheet1(workbook);
             createSheet2(workbook);
+
+            System.out.println("=== EXCEL ЛОГ: НАЧАЛО (generateEmptyExcel) ===");
+            for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+                Sheet sheetLog = workbook.getSheetAt(s);
+                System.out.println("--- Лист: \"" + sheetLog.getSheetName() + "\" ---");
+                for (int r = 0; r <= sheetLog.getLastRowNum(); r++) {
+                    Row row = sheetLog.getRow(r);
+                    if (row == null) continue;
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Строка ").append(r + 1).append(": ");
+                    for (int c = 0; c < row.getLastCellNum(); c++) {
+                        Cell cell = row.getCell(c);
+                        if (cell == null) {
+                            sb.append("[пусто] | ");
+                            continue;
+                        }
+                        String val;
+                        switch (cell.getCellType()) {
+                            case STRING: val = cell.getStringCellValue(); break;
+                            case NUMERIC: val = String.valueOf(cell.getNumericCellValue()); break;
+                            case BOOLEAN: val = String.valueOf(cell.getBooleanCellValue()); break;
+                            case FORMULA: val = "[FORMULA:" + cell.getCellFormula() + "]"; break;
+                            default: val = "[" + cell.getCellType() + "]"; break;
+                        }
+                        CellReference ref = new CellReference(r, c);
+                        sb.append(ref.formatAsString()).append("=").append(val).append(" | ");
+                    }
+                    System.out.println(sb.toString());
+                }
+            }
+            System.out.println("=== EXCEL ЛОГ: КОНЕЦ (generateEmptyExcel) ===");
+
             workbook.write(out);
             return out.toByteArray();
         }
@@ -231,7 +554,7 @@ public class RouteSheetService {
         sheet.setMargin(Sheet.FooterMargin, 0.31496062992125984);
     }
 
-    private void createSheet1(Workbook wb) {
+    private Sheet createSheet1(Workbook wb) {
         Sheet sheet = wb.createSheet("Лист1");
         columnWidth(sheet, 1, 4.42578125);
         columnWidth(sheet, 2, 30.5703125);
@@ -552,9 +875,10 @@ public class RouteSheetService {
         merge(sheet, "I23:J23");
         merge(sheet, "M23:N23");
         printSetup(sheet);
+        return sheet;
     }
 
-    private void createSheet2(Workbook wb) {
+    private Sheet createSheet2(Workbook wb) {
         Sheet sheet = wb.createSheet("Лист2");
         columnWidth(sheet, 1, 18.140625);
         columnWidth(sheet, 2, 22.42578125);
@@ -905,6 +1229,463 @@ public class RouteSheetService {
         merge(sheet, "I28:J28");
         merge(sheet, "D34:E34");
         printSetup(sheet);
+        return sheet;
     }
+
+
+    public List<RouteSheetInfoDTO> getRouteSheetInfoByWorkDates(LocalDate dateFrom, LocalDate dateTo) {
+
+        LocalDateTime dateTimeFrom = dateFrom.atStartOfDay();
+        LocalDateTime dateTimeTo = dateTo.atTime(LocalTime.MAX);
+
+        List<TruckUserAssignment> truckUserAssignmentList =
+                truckUserAssignmentRepository.findByWorkDates(dateTimeFrom, dateTimeTo);
+
+        // Собираем ID
+        List<Long> assignmentIds = truckUserAssignmentList.stream()
+                .map(TruckUserAssignment::getId)
+                .collect(Collectors.toList());
+
+        List<Long> truckIds = truckUserAssignmentList.stream()
+                .map(TruckUserAssignment::getTruckId)
+                .collect(Collectors.toList());
+
+        List<Long> userIds = truckUserAssignmentList.stream()
+                .map(TruckUserAssignment::getUserId)
+                .collect(Collectors.toList());
+
+        // Достаем связанные данные
+        List<Truck> truckList = truckRepository.findAllByIdIn(truckIds);
+        List<User> userList = userRepository.findAllByIdUserIn(userIds);
+        List<RouteSheet> routeSheets = routeSheetRepository.findAllByIdTruckUserAssignmentIn(assignmentIds);
+
+        // Создаем мапы для быстрого поиска
+        Map<Long, Truck> truckMap = truckList.stream()
+                .collect(Collectors.toMap(Truck::getId, Function.identity()));
+
+        Map<Long, User> userMap = userList.stream()
+                .collect(Collectors.toMap(User::getIdUser, Function.identity()));
+
+        Map<Long, RouteSheet> routeSheetMap = routeSheets.stream()
+                .collect(Collectors.toMap(RouteSheet::getIdTruckUserAssignment, Function.identity()));
+
+        List<Long> routeSheetIds = routeSheets.stream()
+                .map(RouteSheet::getIdRouteSheet)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        List<Refueling> allRefuelings = refuelingRepository.findByIdRouteSheetIn(routeSheetIds);
+
+        Map<Long, List<Refueling>> refuelingMap = allRefuelings.stream()
+                .collect(Collectors.groupingBy(Refueling::getIdRouteSheet));
+
+        // Создаем лист для результата
+        List<RouteSheetInfoDTO> resultList = new ArrayList<>();
+
+        // Проходим по каждой assignment, берем из мапов данные, формируем ДТО и кладем в лист
+        for (TruckUserAssignment assignment : truckUserAssignmentList) {
+            RouteSheet routeSheet = routeSheetMap.get(assignment.getId());
+
+            if (routeSheet == null) {
+                continue;
+            }
+
+            Truck truck = truckMap.get(assignment.getTruckId());
+            User user = userMap.get(assignment.getUserId());
+
+            List<Refueling> refuelings = refuelingMap.getOrDefault(
+                    routeSheet.getIdRouteSheet(), Collections.emptyList());
+
+            RouteSheetInfoDTO dto =
+                    mapToRouteSheetInfoDTO(assignment, truck, user, routeSheet, refuelings);
+
+            resultList.add(dto);
+        }
+
+        return resultList;
+    }
+
+    private RouteSheetInfoDTO mapToRouteSheetInfoDTO(
+            TruckUserAssignment assignment,
+            Truck truck,
+            User user,
+            RouteSheet routeSheet,
+            List<Refueling> refuelings) {
+
+        RouteSheetInfoDTO dto = new RouteSheetInfoDTO();
+
+        if (assignment != null) {
+            dto.setIdTruckUserAssigment(assignment.getId());
+            dto.setIdTruck(assignment.getTruckId());
+            dto.setIdUser(assignment.getUserId());
+
+            if (assignment.getDateFrom() != null) {
+                dto.setEnterLineDate(assignment.getDateFrom().toLocalDate());
+            }
+
+            if (assignment.getDateTo() != null) {
+                dto.setEndLineDate(assignment.getDateTo().toLocalDate());
+            }
+        }
+
+        if (truck != null) {
+            dto.setRegistrationNumber(truck.getRegistrationNumber());
+            dto.setCarBrand(truck.getBrand());
+        }
+
+        if (user != null) {
+            if (user.getTabNumber() != null) {
+                dto.setWorkerTabelNumber(String.valueOf(user.getTabNumber()));
+            }
+
+            dto.setWorkerFullName(user.getFullName());
+        }
+
+        if (routeSheet != null) {
+            dto.setLastPrintTime(routeSheet.getLastPrintTime());
+
+            if (routeSheet.getIdRouteSheet() != null) {
+                dto.setIdRouteSheet(routeSheet.getIdRouteSheet());
+            }
+
+            if (routeSheet.getIdOrder() != null) {
+                dto.setIdOrder(routeSheet.getIdOrder());
+            }
+
+            if (routeSheet.getStatus() != null) {
+                dto.setRouteSheetStatus(routeSheet.getStatus().getDescription());
+            }
+
+            dto.setStartOdometerValue(routeSheet.getStartOdometerValue());
+            dto.setEndOdometerValue(routeSheet.getEndOdometerValue());
+            dto.setRefWorkTime(routeSheet.getRefWorkTime());
+            dto.setVebastoWorkTime(routeSheet.getVebastWorkTime());
+
+            dto.setRefuelingList(refuelings);
+        }
+
+        return dto;
+    }
+
+    @Transactional
+    public Map<String, Object> completeRouteSheetDay(
+            Long idTruckUserAssiment,
+            Integer startOdometerValue,
+            Integer endOdometerValue,
+            Double refWorkTime,
+            Double vebastoWorkTime,
+            Double fuelAmount) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (idTruckUserAssiment == null) {
+            response.put("status", 100);
+            response.put("message", "Ошибка: не указан id назначения автомобиля");
+            return response;
+        }
+
+        RouteSheet routeSheet =
+                routeSheetRepository.findByIdTruckUserAssignmentAndStatus(
+                        idTruckUserAssiment,
+                        RouteSheetStatus.ACTIVE
+                );
+
+        if (routeSheet == null) {
+            response.put("status", 100);
+            response.put("message", "Ошибка: активный маршрутный лист не обнаружен");
+            return response;
+        }
+
+        TruckUserAssignment truckUserAssignment =
+                truckUserAssignmentRepository.getById(idTruckUserAssiment);
+
+        if (truckUserAssignment == null) {
+            response.put("status", 100);
+            response.put("message", "Ошибка: назначение автомобиля не обнаружено");
+            return response;
+        }
+
+        if (truckUserAssignment.getTruckId() == null) {
+            response.put("status", 100);
+            response.put("message", "Ошибка: у назначения не указан автомобиль");
+            return response;
+        }
+
+        Truck truck = truckRepository.getById(truckUserAssignment.getTruckId());
+
+        if (truck == null) {
+            response.put("status", 100);
+            response.put("message", "Ошибка: автомобиль не обнаружен");
+            return response;
+        }
+
+        // Закрываем маршрутный лист
+        routeSheet.setStatus(RouteSheetStatus.COMPLETED);
+        routeSheet.setStartOdometerValue(startOdometerValue);
+        routeSheet.setEndOdometerValue(endOdometerValue);
+        routeSheet.setRefWorkTime(refWorkTime);
+        routeSheet.setVebastWorkTime(vebastoWorkTime);
+
+        // Сохраняем изменения маршрутного листа
+        RouteSheet savedRouteSheet = routeSheetRepository.save(routeSheet);
+
+        // Если RouteSheet успешно сохранён — создаём запись о топливе
+        Refueling refueling = new Refueling();
+        refueling.setIdRouteSheet(savedRouteSheet.getIdRouteSheet());
+        refueling.setFuelAmount(fuelAmount);
+        refueling.setFuelGrade(truck.getFuelGrade());
+
+        refuelingRepository.save(refueling);
+
+        response.put("status", 200);
+        response.put("message", "Маршрутный лист закрыт");
+        response.put("data", savedRouteSheet);
+
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateRouteSheetsAccountingReport(
+            LocalDate dateFrom,
+            LocalDate dateTo) throws IOException {
+
+        LocalDateTime dateTimeFrom = dateFrom.atStartOfDay();
+        LocalDateTime dateTimeTo = dateTo.atTime(LocalTime.MAX);
+
+        List<TruckUserAssignment> assignments =
+                truckUserAssignmentRepository.findByWorkDates(dateTimeFrom, dateTimeTo);
+
+        if (assignments.isEmpty()) {
+            return generateAccountingReportEmpty();
+        }
+
+        List<Long> assignmentIds = assignments.stream()
+                .map(TruckUserAssignment::getId)
+                .collect(Collectors.toList());
+
+        List<Long> truckIds = assignments.stream()
+                .map(TruckUserAssignment::getTruckId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Long> userIds = assignments.stream()
+                .map(TruckUserAssignment::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<RouteSheet> routeSheets =
+                routeSheetRepository.findAllByIdTruckUserAssignmentIn(assignmentIds);
+
+        List<Long> routeSheetIds = routeSheets.stream()
+                .map(RouteSheet::getIdRouteSheet)
+                .collect(Collectors.toList());
+
+        List<Truck> trucks = truckRepository.findAllByIdIn(truckIds);
+        List<User> users = userRepository.findAllByIdUserIn(userIds);
+        List<DriverCard> driverCards = driverCardRepository.findAllByIdUserIn(userIds);
+
+        List<Refueling> refuelings = routeSheetIds.isEmpty()
+                ? new ArrayList<>()
+                : refuelingRepository.findByIdRouteSheetIn(routeSheetIds);
+
+        Map<Long, RouteSheet> routeSheetByAssignment = routeSheets.stream()
+                .collect(Collectors.toMap(
+                        RouteSheet::getIdTruckUserAssignment,
+                        Function.identity(),
+                        (existing, replacement) -> existing
+                ));
+
+        Map<Long, Truck> truckMap = trucks.stream()
+                .collect(Collectors.toMap(Truck::getId, Function.identity()));
+
+        Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getIdUser, Function.identity()));
+
+        Map<Long, DriverCard> driverCardMap = driverCards.stream()
+                .filter(c -> !Boolean.TRUE.equals(c.getBlock()))
+                .collect(Collectors.toMap(
+                        DriverCard::getIdUser,
+                        Function.identity(),
+                        (existing, replacement) -> existing
+                ));
+
+        Map<Long, List<Refueling>> refuelingByRouteSheet = refuelings.stream()
+                .collect(Collectors.groupingBy(
+                        Refueling::getIdRouteSheet
+                ));
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Отчет по маршрутным листам");
+
+            createAccountingReportHeader(workbook, sheet);
+
+            int rowIdx = 1;
+
+            for (TruckUserAssignment assignment : assignments) {
+                RouteSheet routeSheet =
+                        routeSheetByAssignment.get(assignment.getId());
+
+                Truck truck = truckMap.get(assignment.getTruckId());
+                User user = userMap.get(assignment.getUserId());
+                DriverCard driverCard = driverCardMap.get(assignment.getUserId());
+                List<Refueling> rowRefuelings =
+                        routeSheet != null
+                                ? refuelingByRouteSheet.getOrDefault(
+                                        routeSheet.getIdRouteSheet(),
+                                        List.of()
+                                )
+                                : List.of();
+
+                Row row = sheet.createRow(rowIdx++);
+                fillAccountingReportRow(
+                        row,
+                        routeSheet,
+                        truck,
+                        user,
+                        driverCard,
+                        assignment,
+                        rowRefuelings
+                );
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private byte[] generateAccountingReportEmpty() throws IOException {
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Отчет по маршрутным листам");
+            createAccountingReportHeader(workbook, sheet);
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private void fillAccountingReportRow(
+            Row row,
+            RouteSheet routeSheet,
+            Truck truck,
+            User user,
+            DriverCard driverCard,
+            TruckUserAssignment assignment,
+            List<Refueling> refuelings) {
+
+        int col = 0;
+
+        double refuelAmount = refuelings.stream()
+                .mapToDouble(r -> r.getFuelAmount() != null ? r.getFuelAmount() : 0.0)
+                .sum();
+
+        String fuelGrade = refuelings.stream()
+                .map(Refueling::getFuelGrade)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        Integer mileage = null;
+        if (routeSheet != null
+                && routeSheet.getStartOdometerValue() != null
+                && routeSheet.getEndOdometerValue() != null) {
+            mileage = routeSheet.getEndOdometerValue()
+                    - routeSheet.getStartOdometerValue();
+        }
+
+        // Номер ПЛ
+        setCell(row, col++, routeSheet != null ? routeSheet.getIdRouteSheet() : null);
+        // Статус
+        setCell(row, col++, routeSheet != null && routeSheet.getStatus() != null
+                ? routeSheet.getStatus().getDescription()
+                : null);
+        // Марка автомобиля
+        setCell(row, col++, truck != null ? truck.getBrand() : null);
+        // Регистрационный знак
+        setCell(row, col++, truck != null ? truck.getRegistrationNumber() : null);
+        // Табельный номер
+        setCell(row, col++, user != null ? user.getTabNumber() : null);
+        // ФИО
+        setCell(row, col++, user != null ? user.getFullName() : null);
+        // Серия и номер ВУ
+        setCell(row, col++, driverCard != null ? driverCard.getNumber() : null);
+        // Дата выезда на линию
+        setCell(row, col++, assignment.getDateFrom() != null
+                ? assignment.getDateFrom().toLocalDate()
+                : null);
+        // Дата возвращения с линии
+        setCell(row, col++, assignment.getDateTo() != null
+                ? assignment.getDateTo().toLocalDate()
+                : null);
+        // Начальные показания одометра
+        setCell(row, col++, routeSheet != null ? routeSheet.getStartOdometerValue() : null);
+        // Конечные показания одометра
+        setCell(row, col++, routeSheet != null ? routeSheet.getEndOdometerValue() : null);
+        // Время работы РЭФ, ч.
+        setCell(row, col++, routeSheet != null ? routeSheet.getRefWorkTime() : null);
+        // Время работы Вебасто, ч.
+        setCell(row, col++, routeSheet != null ? routeSheet.getVebastWorkTime() : null);
+        // № топливной карты
+        setCell(row, col++, truck != null ? truck.getFuelCardNumber() : null);
+        // Дата заправки (данных нет — пустая ячейка)
+        setCell(row, col++, null);
+        // Марка ТСМ (топливо)
+        setCell(row, col++, fuelGrade);
+        // Количество, л.
+        setCell(row, col++, refuelAmount > 0 ? refuelAmount : null);
+        // Пробег, км.
+        setCell(row, col++, mileage);
+        // Температура воздуха, ℃ (данных нет — пустая ячейка)
+        setCell(row, col++, null);
+    }
+
+    private void setCell(Row row, int index, Object value) {
+        Cell cell = row.createCell(index);
+        if (value == null) {
+            return;
+        }
+        if (value instanceof Number) {
+            cell.setCellValue(((Number) value).doubleValue());
+        } else {
+            cell.setCellValue(value.toString());
+        }
+    }
+
+    private void createAccountingReportHeader(Workbook workbook, Sheet sheet) {
+
+        String[] headers = {
+                "Номер ПЛ",
+                "Статус",
+                "Марка автомобиля, прицепа, полуприцепа",
+                "Регистрационный знак",
+                "Табельный номер",
+                "Фамилия, Имя, Отчество",
+                "Серия и номер ВУ",
+                "Дата выезда на линию",
+                "Дата возвращения с линии",
+                "Начальные показания одометра",
+                "Конечные показания одометра",
+                "Время работы РЭФ, ч.",
+                "Время работы Вебасто, ч.",
+                "№ топливной карты",
+                "Дата заправки",
+                "Марка ТСМ",
+                "Количество, л.",
+                "Пробег, км.",
+                "Температура воздуха, ℃"
+        };
+
+        Row headerRow = sheet.createRow(0);
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+    }
+
+
 
 }

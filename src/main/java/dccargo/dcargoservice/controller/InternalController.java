@@ -53,19 +53,27 @@ public class InternalController {
 
 
     @PostMapping("/assignTruckUserToOrder")
-    public ResponseEntity<Object> assignTruckUserToOrder(@RequestBody Long idOrder,
-                                                         @RequestBody Long idTruck,
-                                                         @RequestBody Long idUser,
-                                                         @RequestBody String userAdd,
-                                                         @RequestBody Long idTruckUserAssigment) {
-        try {
-            OrderTruck savedAssigment = orderTruckService.assignTruckUserToOrder(idOrder, idTruck, idUser, userAdd, idTruckUserAssigment);
+    public ResponseEntity<Object> assignTruckUserToOrder(
+            @RequestParam Long idOrder,
+            @RequestParam Long idTruck,
+            @RequestParam Long idUser,
+            @RequestParam String userAdd,
+            @RequestParam Long idTruckUserAssigment) {
 
-            return ResponseEntity.ok(savedAssigment);
+        try {
+            OrderTruck savedAssignment =
+                    orderTruckService.assignTruckUserToOrder(
+                            idOrder,
+                            idTruck,
+                            idUser,
+                            userAdd,
+                            idTruckUserAssigment
+                    );
+
+            return ResponseEntity.ok(savedAssignment);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
 
 

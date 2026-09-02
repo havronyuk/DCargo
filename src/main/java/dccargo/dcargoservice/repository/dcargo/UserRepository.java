@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User,Long> {
 
+    User getByIdUser(Long idUser);
+
 	Optional<User> findByIdUser(Long idUser);
 
 	List<User> findAllByBlockIsFalse();
@@ -18,6 +20,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
 	List<User> findAllByIdUserIn(List<Long> idUsers);
 
     boolean existsByLoginTelephoneAndBlockIsFalse(String loginTelephone);
+
+    boolean existsByTabNumberAndBlockIsFalse(Long tabNumber);
 
     boolean existsByIdUser(Long idUser);
 

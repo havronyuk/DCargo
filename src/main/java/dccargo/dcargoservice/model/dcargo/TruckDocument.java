@@ -37,19 +37,19 @@ public class TruckDocument {
      * Государственный номер автомобиля.
      * Хранится отдельно для упрощения поиска и отображения.
      */
-    @Column(name = "registration_number", nullable = false)
+    @Column(name = "registration_number")
     private String registrationNumber;
 
     /**
      * Дата и время прохождения технического осмотра.
      */
-    @Column(name = "inspection_date", nullable = false)
-    private LocalDateTime inspectionDate;
+    @Column(name = "inspection_date")
+    private LocalDate inspectionDate;
 
     /**
      * Дата окончания действия технического осмотра.
      */
-    @Column(name = "valid_until", nullable = false)
+    @Column(name = "valid_until")
     private LocalDate validUntil;
 
     /**
@@ -129,5 +129,12 @@ public class TruckDocument {
     @Column(name = "from_system")
     private String fromSystem;
 
+    //владелец дока
+    @Column(name = "owner")
+    private String owner;
+
+    //для тех паспорта и чета еще
+    @Column(name = "address")
+    private String address;
 
 }

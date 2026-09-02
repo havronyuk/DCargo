@@ -11,6 +11,9 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Long> {
 
+    @EntityGraph(attributePaths = {
+            "orderPoints",
+    })
     Order getByIdOrder(Long idOrder);
 
 

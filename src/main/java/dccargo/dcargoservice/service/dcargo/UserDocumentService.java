@@ -97,16 +97,18 @@ public class UserDocumentService {
 			);
 		}
 
-		if (userDocument.getDocumentNumber() != null
-				&& userDocumentRepository.existsByDocumentNumber(
-						userDocument.getDocumentNumber())) {
-			throw new MainServiceException(
-					"Документ с номером "
-							+ userDocument.getDocumentNumber()
-							+ " уже существует"
-			);
-		}
+//		if (userDocument.getDocumentNumber() != null
+//				&& userDocumentRepository.existsByDocumentNumber(
+//						userDocument.getDocumentNumber())) {
+//			throw new MainServiceException(
+//					"Документ с номером "
+//							+ userDocument.getDocumentNumber()
+//							+ " уже существует"
+//			);
+//		}
 
+
+		userDocument.setCreatedAt(LocalDateTime.now());
 		userDocument.setStatus(TechnicalInspectionStatus.ACTIVE);
 		userDocument.setCreatedByUserId(securityUtils.getCurrentUserId());
 		userDocument.setCreatedByUserName(securityUtils.getCurrentUsername());
@@ -217,6 +219,31 @@ public class UserDocumentService {
 					"Дата окончания действия не может быть раньше даты проведения документа"
 			);
 		}
+
+		dbDocument.setDopogCistern(
+				userDocument.getDopogCistern() != null
+						? userDocument.getDopogCistern()
+						: dbDocument.getDopogCistern()
+		);
+
+		dbDocument.setDopogNotCistern(
+				userDocument.getDopogNotCistern() != null
+						? userDocument.getDopogNotCistern()
+						: dbDocument.getDopogNotCistern()
+		);
+
+		dbDocument.setInternationalCategories(
+				userDocument.getInternationalCategories() != null
+						? userDocument.getInternationalCategories()
+						: dbDocument.getInternationalCategories()
+		);
+
+		dbDocument.setInternationalDriverCardNumber(
+				userDocument.getInternationalDriverCardNumber() != null
+						? userDocument.getInternationalDriverCardNumber()
+						: dbDocument.getInternationalDriverCardNumber()
+		);
+
 
 		dbDocument.setUpdatedAt(LocalDateTime.now());
 

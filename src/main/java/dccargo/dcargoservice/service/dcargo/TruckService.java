@@ -37,30 +37,39 @@ public class TruckService {
                             + " уже существует"
             );
         }
-    	
-    	if (truckRepository.existsByInternalId(truck.getInternalId())) {
-            throw new MainServiceException(
-                    "Автомобиль с внутренним id "
-                            + truck.getInternalId()
-                            + " уже существует"
-            );
+
+    	if(truck.getInternalId() != null){
+            if (truckRepository.existsByInternalId(truck.getInternalId())) {
+                throw new MainServiceException(
+                        "Автомобиль с внутренним id "
+                                + truck.getInternalId()
+                                + " уже существует"
+                );
+            }
         }
-    	
-    	if (truckRepository.existsByInternalNumber(truck.getInternalNumber())) {
-            throw new MainServiceException(
-                    "Автомобиль с внутренним номером "
-                            + truck.getInternalNumber()
-                            + " уже существует"
-            );
+
+
+    	if(truck.getInternalNumber() != null){
+            if (truckRepository.existsByInternalNumber(truck.getInternalNumber())) {
+                throw new MainServiceException(
+                        "Автомобиль с внутренним номером "
+                                + truck.getInternalNumber()
+                                + " уже существует"
+                );
+            }
         }
-    	
-    	if (truckRepository.existsByGarageNumber(truck.getGarageNumber())) {
-    		throw new MainServiceException(
-    				"Автомобиль с гаражным номером "
-    						+ truck.getGarageNumber()
-    						+ " уже существует"
-    				);
-    	}
+
+
+    	if(truck.getGarageNumber() != null){
+            if (truckRepository.existsByGarageNumber(truck.getGarageNumber())) {
+                throw new MainServiceException(
+                        "Автомобиль с гаражным номером "
+                                + truck.getGarageNumber()
+                                + " уже существует"
+                );
+            }
+        }
+
     	
     	if (truck.getVin() != null && truckRepository.existsByVin(truck.getVin())) {
             throw new MainServiceException(
@@ -116,6 +125,9 @@ public class TruckService {
         dbTruck.setStatus(truck.getStatus() != null ? truck.getStatus() : dbTruck.getStatus());
         dbTruck.setComment(truck.getComment() != null ? truck.getComment() : dbTruck.getComment());
         dbTruck.setUpdatedAt(LocalDateTime.now());
+        dbTruck.setFuelGrade(truck.getFuelGrade() != null ? truck.getFuelGrade() : dbTruck.getFuelGrade());
+        dbTruck.setFuelCardNumber(truck.getFuelCardNumber() != null ? truck.getFuelCardNumber() : dbTruck.getFuelCardNumber());
+        dbTruck.setInitialOdometerValue(truck.getInitialOdometerValue() != null ? truck.getInitialOdometerValue() : dbTruck.getInitialOdometerValue());
         return truckRepository.save(dbTruck);
     }
     
