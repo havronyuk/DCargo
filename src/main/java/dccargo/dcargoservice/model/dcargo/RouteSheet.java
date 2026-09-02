@@ -24,6 +24,9 @@ public class RouteSheet {
     @Column(name = "id_truck_user_assignment")
     private Long idTruckUserAssignment;
 
+    @Column(name = "id_truck")
+    private Long idTruck;
+
     @Column(name = "id_order")
     private Long idOrder;
 

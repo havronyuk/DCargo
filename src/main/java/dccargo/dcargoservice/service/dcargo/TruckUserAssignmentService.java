@@ -163,6 +163,7 @@ public class TruckUserAssignmentService {
         if(!isSheetExist){
             RouteSheet routeSheet = new RouteSheet();
             routeSheet.setIdTruckUserAssignment(assignment.getId());
+            routeSheet.setIdTruck(assignment.getTruckId());
             routeSheetRepository.save(routeSheet);
         }
 

@@ -30,6 +30,9 @@ public class RouteSheetInfoDTO {
     private Integer startOdometerValue;
     private Integer endOdometerValue;
 
+    private Double startRefWorkValue;
+    private Double stopRefWorkValue;
+
     private Double refWorkTime;
     private Double vebastoWorkTime;
 

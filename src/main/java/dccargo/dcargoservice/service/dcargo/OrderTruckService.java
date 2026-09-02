@@ -69,6 +69,7 @@ public class OrderTruckService {
 
         if(routeSheet == null){
             routeSheet = new RouteSheet();
+            routeSheet.setIdTruck(idTruck);
             routeSheet.setIdTruckUserAssignment(idTruckUserAssigment);
             routeSheet.setIdOrder(idOrder);
 
