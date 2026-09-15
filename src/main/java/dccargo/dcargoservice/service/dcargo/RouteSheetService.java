@@ -1,10 +1,14 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
+import dccargo.dcargoservice.dto.dcargo.CompleteRouteSheetDayRequest;
 import dccargo.dcargoservice.dto.dcargo.RouteSheetInfoDTO;
+import dccargo.dcargoservice.enums.MileageObjectType;
 import dccargo.dcargoservice.enums.RouteSheetStatus;
 import dccargo.dcargoservice.model.dcargo.*;
 import dccargo.dcargoservice.repository.dcargo.*;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -36,6 +40,9 @@ public class RouteSheetService {
     private final UserRepository userRepository;
     private final DriverCardRepository driverCardRepository;
     private final RefuelingRepository refuelingRepository;
+    private final TruckMileageRepository truckMileageRepository;
+    private final TruckFuelCardRepository truckFuelCardRepository;
+    private final FuelCardRepository fuelCardRepository;
 
     public RouteSheet create(RouteSheet routeSheet){
         if(routeSheetRepository.existsByIdOrderAndIdTruckUserAssignment(routeSheet.getIdOrder(),routeSheet.getIdTruckUserAssignment())){
@@ -45,11 +52,13 @@ public class RouteSheetService {
         return routeSheet;
     }
 
+    @Audited(operation = "UPDATE_ROUTE_SHEET")
     public RouteSheet update(RouteSheet routeSheet){
         routeSheetRepository.save(routeSheet);
         return routeSheet;
     }
 
+    @Audited(operation = "UPDATE_ROUTE_SHEET_INFO")
     @Transactional
     public RouteSheetInfoDTO updateRouteSheet(RouteSheetInfoDTO dto) {
 
@@ -141,7 +150,6 @@ public class RouteSheetService {
     @Transactional
     public Map<String, Object> generateRouteExcelBy(Long idTruckUserAssigment) throws IOException {
 
-        System.out.println("123123123123123");
 
         RouteSheet routeSheet =
                 routeSheetRepository.findByIdTruckUserAssignment(idTruckUserAssigment);
@@ -167,6 +175,56 @@ public class RouteSheetService {
                 .findByIdUserAndBlock(user.getIdUser(), false)
                 .orElse(new DriverCard());
 
+//        Integer startOdometerValue = truckMileageRepository
+//                .findFirstByObjectIdAndObjectTypeOrderByMileageDateDescIdDesc(
+//                        routeSheet.getIdTruck(),
+//                        MileageObjectType.TRUCK
+//                )
+//                .map(TruckMileage::getMileage)
+//                .orElseGet(() -> truck.getInitialOdometerValue() != null
+//                        ? truck.getInitialOdometerValue()
+//                        : 0);
+
+//        Optional<TruckMileage> mileageOptional =
+//                truckMileageRepository
+//                        .findFirstByObjectIdAndObjectTypeOrderByMileageDateDescIdDesc(
+//                                routeSheet.getIdTruck(),
+//                                MileageObjectType.TRUCK
+//                        );
+
+        Optional<TruckMileage> mileageOptional = truckMileageRepository.
+                findFirstByObjectIdAndObjectTypeAndAssignmentDateToLessThanEqualOrderByAssignmentDateToDescIdDesc(
+                        routeSheet.getIdTruck(), MileageObjectType.TRUCK,assignment.getDateFrom());
+
+        System.out.println("=== ODOMETER LOG ===");
+
+// Что вернул запрос
+        System.out.println("Результат запроса TruckMileage: "
+                + mileageOptional.map(TruckMileage::getMileage).orElse(null));
+
+// Что лежит в initialOdometerValue
+        System.out.println("truck.initialOdometerValue: "
+                + truck.getInitialOdometerValue());
+
+// Что в итоге поставили
+        Integer startOdometerValue = mileageOptional
+                .map(TruckMileage::getMileage)
+                .orElseGet(() -> truck.getInitialOdometerValue() != null
+                        ? truck.getInitialOdometerValue()
+                        : 0);
+
+
+
+
+        Double startRefValue = routeSheetRepository.sumRefWorkTimeByTruckExceptRouteSheet(truck.getId(), routeSheet.getIdRouteSheet());
+
+        Double endRefValue = null;
+
+
+        if(routeSheet.getRefWorkTime() != null){
+           endRefValue = startRefValue + routeSheet.getRefWorkTime();
+        }
+
         List<Refueling> refuelingList = refuelingRepository.findByIdRouteSheet(routeSheet.getIdRouteSheet());
 
         try (Workbook workbook = new XSSFWorkbook();
@@ -177,16 +235,14 @@ public class RouteSheetService {
             Sheet sheet1 = createSheet1(workbook);
             Sheet sheet2 = createSheet2(workbook);
 
-            fillSheet1(sheet1, order, truck, user, assignment, routeSheet, card, refuelingList);
+            fillSheet1(sheet1, order, truck, user, assignment, routeSheet, card, refuelingList, startOdometerValue, startRefValue,endRefValue );
 
             if (order != null) {
                 fillSheet2(sheet2, order);
             }
 
-            System.out.println("=== EXCEL ЛОГ: НАЧАЛО ===");
             for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
                 Sheet sheetLog = workbook.getSheetAt(s);
-                System.out.println("--- Лист: \"" + sheetLog.getSheetName() + "\" ---");
                 for (int r = 0; r <= sheetLog.getLastRowNum(); r++) {
                     Row row = sheetLog.getRow(r);
                     if (row == null) continue;
@@ -212,7 +268,7 @@ public class RouteSheetService {
                     System.out.println(sb.toString());
                 }
             }
-            System.out.println("=== EXCEL ЛОГ: КОНЕЦ ===");
+
 
             workbook.write(out);
 
@@ -228,56 +284,191 @@ public class RouteSheetService {
         }
     }
 
-    private void fillSheet1(Sheet sheet, Order order, Truck truck, User user,
-                            TruckUserAssignment truckUserAssignment,
-                            RouteSheet routeSheet, DriverCard driverCard, List<Refueling> refuelingList) {
-        cell(sheet, "A8", truck.getBrand(), 5);
-        cell(sheet, "C8", truck.getRegistrationNumber(), 5);
+    private void fillSheet1(
+            Sheet sheet,
+            Order order,
+            Truck truck,
+            User user,
+            TruckUserAssignment truckUserAssignment,
+            RouteSheet routeSheet,
+            DriverCard driverCard,
+            List<Refueling> refuelingList,
+            Integer startOdometerValue,
+            Double startRefValue,
+            Double endRefValue) {
 
-        cell(sheet, "B11", user.getFullName() + "\n" + driverCard.getNumber(), 5);
-        cell(sheet, "C11", user.getTabNumber(), 5);
-        cell(sheet,"H6", truckUserAssignment.getDateFrom().toLocalDate(), 5);
-        cell(sheet, "H8", truckUserAssignment.getDateTo().toLocalDate(),5);
+        // =========================
+        // Безопасные значения
+        // =========================
 
-        cell(sheet, "J6", routeSheet.getStartOdometerValue(),5);
-        cell(sheet, "J8", routeSheet.getEndOdometerValue(),5);
+        String truckBrand = truck != null
+                ? truck.getBrand()
+                : "";
 
-        cell(sheet, "N8", routeSheet.getRefWorkTime(),5);
-        cell(sheet, "O8", routeSheet.getVebastWorkTime(),5);
+        String registrationNumber = truck != null
+                ? truck.getRegistrationNumber()
+                : "";
+
+        String userFullName = user != null && user.getFullName() != null
+                ? user.getFullName()
+                : "";
+
+        String driverCardNumber = driverCard != null && driverCard.getNumber() != null
+                ? driverCard.getNumber()
+                : "";
+
+        Object tabNumber = user != null
+                ? user.getTabNumber()
+                : null;
+
+        LocalDate dateFrom = truckUserAssignment != null
+                && truckUserAssignment.getDateFrom() != null
+                ? truckUserAssignment.getDateFrom().toLocalDate()
+                : null;
+
+        LocalDate dateTo = truckUserAssignment != null
+                && truckUserAssignment.getDateTo() != null
+                ? truckUserAssignment.getDateTo().toLocalDate()
+                : null;
+
+        Integer endOdometerValue = routeSheet != null
+                ? routeSheet.getEndOdometerValue()
+                : null;
+
+        Double refWorkTime = routeSheet != null
+                ? routeSheet.getRefWorkTime()
+                : null;
+
+        Double vebastWorkTime = routeSheet != null
+                ? routeSheet.getVebastWorkTime()
+                : null;
+
+        Long routeSheetId = routeSheet != null
+                ? routeSheet.getIdRouteSheet()
+                : null;
 
 
-        cell(sheet, "B5", "T"+routeSheet.getIdRouteSheet(), 5);
+        // =========================
+        // Основная информация
+        // =========================
 
-        if (refuelingList != null) {
+        cell(sheet, "A8", truckBrand, 5);
 
-            for (int i = 0; i < refuelingList.size(); i++) {
+        cell(sheet, "C8", registrationNumber, 5);
 
-                Refueling refueling = refuelingList.get(i);
+        cell(
+                sheet,
+                "B11",
+                userFullName + (driverCardNumber.isEmpty() ? "" : "\n" + driverCardNumber),
+                5
+        );
 
-                if (i < 6) {
-                    // Первый блок: H / J / K
-                    int row = 11 + i;
+        cell(sheet, "C11", tabNumber, 5);
 
-                    cell(sheet, "H" + row, truckUserAssignment.getDateFrom().toLocalDate(), 5);
-                    cell(sheet, "J" + row, refueling.getFuelGrade(), 5);
-                    cell(sheet, "K" + row, refueling.getFuelAmount(), 5);
+        // Дата выезда
+        cell(sheet, "H6", dateFrom, 5);
 
-                } else if (i < 12) {
-                    // Второй блок: L / N / O
-                    int row = 11 + (i - 6);
+        // Дата возвращения.
+        // Если dateTo == null — просто оставляем ячейку пустой.
+        cell(sheet, "H8", dateTo, 5);
 
-                    cell(sheet, "L" + row,truckUserAssignment.getDateFrom().toLocalDate(), 5);
-                    cell(sheet, "N" + row, refueling.getFuelGrade(), 5);
-                    cell(sheet, "O" + row, refueling.getFuelAmount(), 5);
-                }
-            }
+
+        // =========================
+        // Пробег
+        // =========================
+
+        cell(sheet, "J6", startOdometerValue, 5);
+
+        cell(sheet, "J8", endOdometerValue, 5);
+
+
+        // =========================
+        // Рабочее время
+        // =========================
+
+        cell(sheet, "N8", refWorkTime, 5);
+
+        cell(sheet, "O8", vebastWorkTime, 5);
+
+
+        // =========================
+        // Рефрижератор
+        // =========================
+
+        cell(sheet, "L6", startRefValue, 5);
+
+        cell(sheet, "L8", endRefValue, 5);
+
+
+        // =========================
+        // Номер маршрутного листа
+        // =========================
+
+        cell(
+                sheet,
+                "B5",
+                routeSheetId != null ? "T" + routeSheetId : "",
+                5
+        );
+
+
+        // =========================
+        // Заправки
+        // =========================
+
+        if (refuelingList == null || refuelingList.isEmpty()) {
+            return;
         }
 
-        // дата выезда
-//        cell(sheet, "H6", assignment.getDateFrom(), 5);
+        for (int i = 0; i < refuelingList.size(); i++) {
 
-        // дата возвращения
-//        cell(sheet, "H8", assignment.getDateTo(), 2);
+            // Excel у нас рассчитан максимум на 12 заправок:
+            // 0-5   -> H/J/K
+            // 6-11  -> L/N/O
+            if (i >= 12) {
+                break;
+            }
+
+            Refueling refueling = refuelingList.get(i);
+
+            if (refueling == null) {
+                continue;
+            }
+
+            String fuelGrade = refueling.getFuelGrade();
+
+            Double fuelAmount = refueling.getFuelAmount();
+
+
+            // =========================
+            // Первый блок
+            // H / J / K
+            // =========================
+
+            if (i < 6) {
+
+                int row = 11 + i;
+
+                cell(sheet, "H" + row, dateFrom, 5);
+                cell(sheet, "J" + row, fuelGrade, 5);
+                cell(sheet, "K" + row, fuelAmount, 5);
+
+            }
+
+            // =========================
+            // Второй блок
+            // L / N / O
+            // =========================
+
+            else {
+
+                int row = 11 + (i - 6);
+
+                cell(sheet, "L" + row, dateFrom, 5);
+                cell(sheet, "N" + row, fuelGrade, 5);
+                cell(sheet, "O" + row, fuelAmount, 5);
+            }
+        }
     }
 
     private void fillSheet2(Sheet sheet, Order order) {
@@ -1331,6 +1522,9 @@ public class RouteSheetService {
         if (truck != null) {
             dto.setRegistrationNumber(truck.getRegistrationNumber());
             dto.setCarBrand(truck.getBrand());
+
+
+
         }
 
         if (user != null) {
@@ -1356,10 +1550,71 @@ public class RouteSheetService {
                 dto.setRouteSheetStatus(routeSheet.getStatus().getDescription());
             }
 
-            dto.setStartOdometerValue(routeSheet.getStartOdometerValue());
+
+//            Integer startOdometerValue = truckMileageRepository
+//                    .findFirstByObjectIdAndObjectTypeOrderByMileageDateDescIdDesc(
+//                            routeSheet.getIdTruck(),
+//                            MileageObjectType.TRUCK
+//                    )
+//                    .map(TruckMileage::getMileage)
+//                    .orElseGet(() -> truck.getInitialOdometerValue() != null
+//                            ? truck.getInitialOdometerValue()
+//                            : 0);
+
+            LocalDateTime assignmentDateFrom = assignment.getDateFrom();
+
+            System.out.println("=== START ODOMETER ===");
+            System.out.println("Truck ID: " + routeSheet.getIdTruck());
+            System.out.println("Assignment ID: " + assignment.getId());
+            System.out.println("Assignment dateFrom: " + assignmentDateFrom);
+
+            Optional<TruckMileage> mileageOptional =
+                    truckMileageRepository
+                            .findFirstByObjectIdAndObjectTypeAndAssignmentDateToLessThanEqualOrderByAssignmentDateToDescIdDesc(
+                                    routeSheet.getIdTruck(),
+                                    MileageObjectType.TRUCK,
+                                    assignmentDateFrom
+                            );
+
+            System.out.println("Mileage query result exists: " + mileageOptional.isPresent());
+
+            mileageOptional.ifPresent(mileage -> {
+                System.out.println("Found TruckMileage ID: " + mileage.getId());
+                System.out.println("Found mileage: " + mileage.getMileage());
+                System.out.println("Found mileageDate: " + mileage.getMileageDate());
+                System.out.println("Found assignmentDateTo: " + mileage.getAssignmentDateTo());
+            });
+
+            Integer initialOdometerValue = truck.getInitialOdometerValue();
+
+            System.out.println("Truck initialOdometerValue: " + initialOdometerValue);
+
+            Integer startOdometerValue = mileageOptional
+                    .map(TruckMileage::getMileage)
+                    .orElseGet(() -> initialOdometerValue != null
+                            ? initialOdometerValue
+                            : 0);
+
+            System.out.println("FINAL startOdometerValue: " + startOdometerValue);
+            System.out.println("=== END START ODOMETER ===");
+
+            dto.setStartOdometerValue(startOdometerValue);
+
             dto.setEndOdometerValue(routeSheet.getEndOdometerValue());
+
+
             dto.setRefWorkTime(routeSheet.getRefWorkTime());
             dto.setVebastoWorkTime(routeSheet.getVebastWorkTime());
+
+            Double startRefValue = routeSheetRepository.sumRefWorkTimeByTruckExceptRouteSheet(truck.getId(), routeSheet.getIdRouteSheet());
+
+            dto.setStartRefWorkValue(startRefValue);
+
+            if(routeSheet.getRefWorkTime() != null){
+                dto.setStopRefWorkValue(startRefValue + routeSheet.getRefWorkTime());
+            }
+
+
 
             dto.setRefuelingList(refuelings);
         }
@@ -1369,16 +1624,16 @@ public class RouteSheetService {
 
     @Transactional
     public Map<String, Object> completeRouteSheetDay(
-            Long idTruckUserAssiment,
+            Long idTruckUserAssignment,
             Integer startOdometerValue,
             Integer endOdometerValue,
             Double refWorkTime,
             Double vebastoWorkTime,
-            Double fuelAmount) {
+            List<CompleteRouteSheetDayRequest.RefuelingRequest> refuelings) {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (idTruckUserAssiment == null) {
+        if (idTruckUserAssignment == null) {
             response.put("status", 100);
             response.put("message", "Ошибка: не указан id назначения автомобиля");
             return response;
@@ -1386,7 +1641,7 @@ public class RouteSheetService {
 
         RouteSheet routeSheet =
                 routeSheetRepository.findByIdTruckUserAssignmentAndStatus(
-                        idTruckUserAssiment,
+                        idTruckUserAssignment,
                         RouteSheetStatus.ACTIVE
                 );
 
@@ -1397,7 +1652,7 @@ public class RouteSheetService {
         }
 
         TruckUserAssignment truckUserAssignment =
-                truckUserAssignmentRepository.getById(idTruckUserAssiment);
+                truckUserAssignmentRepository.getById(idTruckUserAssignment);
 
         if (truckUserAssignment == null) {
             response.put("status", 100);
@@ -1411,7 +1666,8 @@ public class RouteSheetService {
             return response;
         }
 
-        Truck truck = truckRepository.getById(truckUserAssignment.getTruckId());
+        Truck truck =
+                truckRepository.getById(truckUserAssignment.getTruckId());
 
         if (truck == null) {
             response.put("status", 100);
@@ -1426,16 +1682,52 @@ public class RouteSheetService {
         routeSheet.setRefWorkTime(refWorkTime);
         routeSheet.setVebastWorkTime(vebastoWorkTime);
 
-        // Сохраняем изменения маршрутного листа
-        RouteSheet savedRouteSheet = routeSheetRepository.save(routeSheet);
+        // Привязываем актуальную топливную карту к маршрутному листу
+        FuelCard activeFuelCard = null;
 
-        // Если RouteSheet успешно сохранён — создаём запись о топливе
-        Refueling refueling = new Refueling();
-        refueling.setIdRouteSheet(savedRouteSheet.getIdRouteSheet());
-        refueling.setFuelAmount(fuelAmount);
-        refueling.setFuelGrade(truck.getFuelGrade());
+        Optional<TruckFuelCard> activeLink =
+                truckFuelCardRepository
+                        .findFirstByIdTruckAndIsActiveTrueOrderByCreatedAtDesc(truck.getId());
 
-        refuelingRepository.save(refueling);
+        if (activeLink.isPresent()) {
+            routeSheet.setIdFuelCard(activeLink.get().getIdFuelCard());
+            activeFuelCard = fuelCardRepository
+                    .findById(activeLink.get().getIdFuelCard())
+                    .orElse(null);
+        }
+
+        RouteSheet savedRouteSheet =
+                routeSheetRepository.save(routeSheet);
+
+        // Создаём записи о заправках
+        if (refuelings != null && !refuelings.isEmpty()) {
+
+            for (CompleteRouteSheetDayRequest.RefuelingRequest refuelingRequest
+                    : refuelings) {
+
+                if (refuelingRequest.getFuelAmount() == null) {
+                    continue;
+                }
+
+                Refueling refueling = new Refueling();
+
+                refueling.setIdRouteSheet(
+                        savedRouteSheet.getIdRouteSheet()
+                );
+
+                refueling.setFuelAmount(
+                        refuelingRequest.getFuelAmount()
+                );
+
+                refueling.setFuelGrade(
+                        activeFuelCard != null
+                                ? activeFuelCard.getFuelType()
+                                : truck.getFuelGrade()
+                );
+
+                refuelingRepository.save(refueling);
+            }
+        }
 
         response.put("status", 200);
         response.put("message", "Маршрутный лист закрыт");
@@ -1474,15 +1766,24 @@ public class RouteSheetService {
                 .collect(Collectors.toList());
 
         List<RouteSheet> routeSheets =
-                routeSheetRepository.findAllByIdTruckUserAssignmentIn(assignmentIds);
+                routeSheetRepository.findAllByIdTruckUserAssignmentInAndStatusNot(assignmentIds, RouteSheetStatus.ACTIVE);
 
         List<Long> routeSheetIds = routeSheets.stream()
                 .map(RouteSheet::getIdRouteSheet)
                 .collect(Collectors.toList());
 
+        List<Long> fuelCardIds = routeSheets.stream()
+                .map(RouteSheet::getIdFuelCard)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
         List<Truck> trucks = truckRepository.findAllByIdIn(truckIds);
         List<User> users = userRepository.findAllByIdUserIn(userIds);
         List<DriverCard> driverCards = driverCardRepository.findAllByIdUserIn(userIds);
+        List<FuelCard> fuelCards = fuelCardIds.isEmpty()
+                ? new ArrayList<>()
+                : fuelCardRepository.findAllById(fuelCardIds);
 
         List<Refueling> refuelings = routeSheetIds.isEmpty()
                 ? new ArrayList<>()
@@ -1512,6 +1813,12 @@ public class RouteSheetService {
         Map<Long, List<Refueling>> refuelingByRouteSheet = refuelings.stream()
                 .collect(Collectors.groupingBy(
                         Refueling::getIdRouteSheet
+                ));
+
+        Map<Long, FuelCard> fuelCardMap = fuelCards.stream()
+                .collect(Collectors.toMap(
+                        FuelCard::getId,
+                        Function.identity()
                 ));
 
         try (Workbook workbook = new XSSFWorkbook();
@@ -1546,7 +1853,10 @@ public class RouteSheetService {
                         user,
                         driverCard,
                         assignment,
-                        rowRefuelings
+                        rowRefuelings,
+                        routeSheet != null
+                                ? fuelCardMap.get(routeSheet.getIdFuelCard())
+                                : null
                 );
             }
 
@@ -1574,7 +1884,8 @@ public class RouteSheetService {
             User user,
             DriverCard driverCard,
             TruckUserAssignment assignment,
-            List<Refueling> refuelings) {
+            List<Refueling> refuelings,
+            FuelCard fuelCard) {
 
         int col = 0;
 
@@ -1628,8 +1939,8 @@ public class RouteSheetService {
         setCell(row, col++, routeSheet != null ? routeSheet.getRefWorkTime() : null);
         // Время работы Вебасто, ч.
         setCell(row, col++, routeSheet != null ? routeSheet.getVebastWorkTime() : null);
-        // № топливной карты
-        setCell(row, col++, truck != null ? truck.getFuelCardNumber() : null);
+        // № топливной карты (карта, которая была на данном путевом листе)
+        setCell(row, col++, fuelCard != null ? fuelCard.getCardNumber() : null);
         // Дата заправки (данных нет — пустая ячейка)
         setCell(row, col++, null);
         // Марка ТСМ (топливо)

@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -98,6 +99,7 @@ public class TruckEquipmentService {
         return truckEquipmentRepository.save(truckEquipment);
     }
 
+    @Audited(operation = "UPDATE_TRUCK_EQUIPMENT")
     @Transactional
     public TruckEquipment update(TruckEquipment truckEquipment) {
 

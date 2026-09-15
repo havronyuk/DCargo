@@ -2,14 +2,10 @@ package dccargo.dcargoservice.dto.dcargo.mapper;
 
 import java.util.List;
 
+import dccargo.dcargoservice.model.dcargo.*;
 import org.springframework.stereotype.Component;
 
 import dccargo.dcargoservice.dto.dcargo.TruckDTO;
-import dccargo.dcargoservice.model.dcargo.Truck;
-import dccargo.dcargoservice.model.dcargo.TruckDocument;
-import dccargo.dcargoservice.model.dcargo.TruckEquipment;
-import dccargo.dcargoservice.model.dcargo.TruckMileage;
-import dccargo.dcargoservice.model.dcargo.TruckTire;
 
 @Component
 public class TruckDTOMapper {
@@ -19,7 +15,8 @@ public class TruckDTOMapper {
 	            List<TruckDocument> documents,
 	            List<TruckEquipment> equipment,
 	            List<TruckTire> tires,
-	            List<TruckMileage> mileageHistory
+	            List<TruckMileage> mileageHistory,
+				FuelCard fuelCard
 	    ) {
 
 	        TruckMileage currentMileage = mileageHistory.isEmpty()
@@ -51,8 +48,10 @@ public class TruckDTOMapper {
 	                .comment(truck.getComment())
 	                .createdAt(truck.getCreatedAt())
 	                .updatedAt(truck.getUpdatedAt())
-					.fuelGrade(truck.getFuelGrade())
-					.fuelCardNumber(truck.getFuelCardNumber())
+
+					.fuelGrade(fuelCard != null ? fuelCard.getFuelType() : null)
+					.fuelCardNumber(fuelCard != null ? fuelCard.getCardNumber() : null)
+
 					.initialOdometerValue(truck.getInitialOdometerValue())
 	                .currentMileage(
 	                        currentMileage == null
@@ -69,6 +68,9 @@ public class TruckDTOMapper {
 	                .equipment(equipment)
 	                .tires(tires)
 	                .mileageHistory(mileageHistory)
+					.bodyHeightMm(truck.getBodyHeightMm())
+					.bodyLengthMm(truck.getBodyLengthMm())
+					.bodyWidthMm(truck.getBodyWidthMm())
 	                .build();
 	    }
 

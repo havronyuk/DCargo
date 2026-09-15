@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.audit.Audited;
 import dccargo.dcargoservice.model.dcargo.User;
 import dccargo.dcargoservice.repository.dcargo.UserRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
@@ -21,8 +22,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User createUser(User user){
-        if(userRepository.existsByLoginTelephoneAndBlockIsFalse(user.getLoginTelephone())){
-            throw new MainServiceException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
+
+        if(user.getLoginTelephone() != null){
+            if(userRepository.existsByLoginTelephoneAndBlockIsFalse(user.getLoginTelephone())){
+                throw new MainServiceException("Пользователь с логином телефона " + user.getLoginTelephone() + " уже существует");
+            }
         }
 
         if(user.getTabNumber() != null){
@@ -52,6 +56,7 @@ public class UserService {
      * @param user
      * @return
      */
+    @Audited(operation = "UPDATE_USER")
     @Transactional
     public User update(User user) {
         if (user.getIdUser() == null) {
@@ -93,6 +98,7 @@ public class UserService {
     }
 
 
+    @Audited(operation = "DEACTIVATE_USER")
     public Map<String, Object> deactivateUser(Long idUser) {
         Map<String,Object> response = new HashMap<>();
         try{

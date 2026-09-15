@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.controller;
 
+import dccargo.dcargoservice.dto.dcargo.CompleteRouteSheetDayRequest;
 import dccargo.dcargoservice.dto.dcargo.RouteSheetInfoDTO;
 import dccargo.dcargoservice.model.dcargo.Passport;
 import dccargo.dcargoservice.service.dcargo.RouteSheetService;
@@ -119,96 +120,52 @@ public class RouteSheetController {
 
     @PostMapping("/completeRouteSheetDay")
     public ResponseEntity<?> completeRouteSheetDay(
-            @RequestBody Map<String, Object> request) {
+            @RequestBody CompleteRouteSheetDayRequest request) {
 
-        String[] requiredFields = {
-                "idTruckUserAssignment",
-                "startOdometerValue",
-                "endOdometerValue",
-                "refWorkTime",
-                "vebastoWorkTime",
-                "fuelAmount"
-        };
-
-        for (String field : requiredFields) {
-            if (!request.containsKey(field) || request.get(field) == null) {
-                return ResponseEntity.badRequest().body(
-                        Map.of(
-                                "status", 100,
-                                "message", "Не заполнено обязательное поле: " + field
-                        )
-                );
-            }
-        }
-
-        if (!(request.get("idTruckUserAssignment") instanceof Number)) {
+        if (request.getIdTruckUserAssignment() == null) {
             return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле idTruckUserAssignment должно быть числом")
+                    Map.of(
+                            "status", 100,
+                            "message", "Не заполнено обязательное поле: idTruckUserAssignment"
+                    )
             );
         }
 
-        if (!(request.get("startOdometerValue") instanceof Number)) {
+        if (request.getEndOdometerValue() == null) {
             return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле startOdometerValue должно быть числом")
+                    Map.of(
+                            "status", 100,
+                            "message", "Не заполнено обязательное поле: endOdometerValue"
+                    )
             );
         }
 
-        if (!(request.get("endOdometerValue") instanceof Number)) {
+        if (request.getRefWorkTime() == null) {
             return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле endOdometerValue должно быть числом")
+                    Map.of(
+                            "status", 100,
+                            "message", "Не заполнено обязательное поле: refWorkTime"
+                    )
             );
         }
 
-        if (!(request.get("refWorkTime") instanceof Number)) {
+        if (request.getVebastoWorkTime() == null) {
             return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле refWorkTime должно быть числом")
+                    Map.of(
+                            "status", 100,
+                            "message", "Не заполнено обязательное поле: vebastoWorkTime"
+                    )
             );
         }
-
-        if (!(request.get("vebastoWorkTime") instanceof Number)) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле vebastoWorkTime должно быть числом")
-            );
-        }
-
-        if (!(request.get("fuelAmount") instanceof Number)) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("status", 100,
-                            "message", "Поле fuelAmount должно быть числом")
-            );
-        }
-
-        Long idTruckUserAssignment =
-                ((Number) request.get("idTruckUserAssignment")).longValue();
-
-        Integer startOdometerValue =
-                ((Number) request.get("startOdometerValue")).intValue();
-
-        Integer endOdometerValue =
-                ((Number) request.get("endOdometerValue")).intValue();
-
-        Double refWorkTime =
-                ((Number) request.get("refWorkTime")).doubleValue();
-
-        Double vebastoWorkTime =
-                ((Number) request.get("vebastoWorkTime")).doubleValue();
-
-        Double fuelAmount =
-                ((Number) request.get("fuelAmount")).doubleValue();
 
         Map<String, Object> response =
                 routeSheetService.completeRouteSheetDay(
-                        idTruckUserAssignment,
-                        startOdometerValue,
-                        endOdometerValue,
-                        refWorkTime,
-                        vebastoWorkTime,
-                        fuelAmount
+                        request.getIdTruckUserAssignment(),
+                        request.getStartOdometerValue(),
+                        request.getEndOdometerValue(),
+                        request.getRefWorkTime(),
+                        request.getVebastoWorkTime(),
+                        request.getRefuelings()
                 );
 
         return ResponseEntity.ok(response);

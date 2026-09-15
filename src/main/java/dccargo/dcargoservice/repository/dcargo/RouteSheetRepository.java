@@ -22,7 +22,7 @@ public interface RouteSheetRepository extends JpaRepository<RouteSheet, Long> {
 
     List<RouteSheet> findAllByIdTruckUserAssignmentIn(List<Long> ids);
 
-
+    List<RouteSheet> findAllByIdTruckUserAssignmentInAndStatusNot(List<Long> ids,RouteSheetStatus status);
 
 
     boolean existsByIdTruckUserAssignmentAndStatus(Long idTruckUserAssigment, RouteSheetStatus routeSheetStatus);
@@ -39,5 +39,17 @@ public interface RouteSheetRepository extends JpaRepository<RouteSheet, Long> {
             @Param("idRouteSheet") Long idRouteSheet,
             @Param("lastPrintTime") LocalDateTime lastPrintTime
     );
+
+    @Query("""
+    SELECT COALESCE(SUM(r.refWorkTime), 0)
+    FROM RouteSheet r
+    WHERE r.idTruck = :idTruck
+      AND r.idRouteSheet <> :idRouteSheet
+""")
+    Double sumRefWorkTimeByTruckExceptRouteSheet(
+            @Param("idTruck") Long idTruck,
+            @Param("idRouteSheet") Long idRouteSheet
+    );
+
 
 }

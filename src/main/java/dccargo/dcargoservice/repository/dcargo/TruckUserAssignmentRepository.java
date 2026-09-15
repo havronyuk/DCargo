@@ -121,6 +121,21 @@ public interface TruckUserAssignmentRepository extends JpaRepository<TruckUserAs
     );
 
 
+//    boolean existsByIsPrimaryDriverAndTruckIdAndDateFromGreaterThanEqualAndDateToLessThanEqual(
+//            boolean isPrimaryDriver,
+//            Long truckId,
+//            LocalDateTime dateFrom,
+//            LocalDateTime dateTo
+//    );
+//
+//    boolean existsByIsPrimaryDriverAndTruckIdAndAssignmentTypeAndStatus(
+//            boolean isPrimaryDriver,
+//            Long truckId,
+//            TruckUserAssignmentType type,
+//            TruckUserAssignmentStatus status
+//    );
+
+
     @Query("""
     SELECT tua
     FROM TruckUserAssignment tua

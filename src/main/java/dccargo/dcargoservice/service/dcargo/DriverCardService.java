@@ -1,9 +1,12 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.audit.Audited;
+import dccargo.dcargoservice.enums.TechnicalInspectionStatus;
 import dccargo.dcargoservice.model.dcargo.DriverCard;
-import dccargo.dcargoservice.model.dcargo.Passport;
+import dccargo.dcargoservice.model.dcargo.UserDocument;
 import dccargo.dcargoservice.repository.dcargo.DriverCardRepository;
+import dccargo.dcargoservice.repository.dcargo.UserDocumentRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import dccargo.dcargoservice.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +18,22 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor  // генерирует конструктор для всех final полей
+@RequiredArgsConstructor
 public class DriverCardService {
 
     private final DriverCardRepository driverCardRepository;
 
+    private final UserDocumentRepository userDocumentRepository;
+
     private final SecurityUtils securityUtils;
+
+    // Типы документов, привязанные к водительскому удостоверению
+    private static final long DOCUMENT_TYPE_INTERNATIONAL_VU = 4L;
+    private static final long DOCUMENT_TYPE_INTERNATIONAL_VU_ALT = 5L;
 
     public DriverCard create(DriverCard driverCard) {
 
@@ -40,6 +50,10 @@ public class DriverCardService {
 
         if(existActual){
             throw new MainServiceException("Создание новой записи запрещено. Заблокируйте актуальную запись");
+        }
+
+        if(driverCard.getNumber() != null){
+            driverCard.setNumber(normalize(driverCard.getNumber()));
         }
 
         if(driverCardRepository.existsByNumber(driverCard.getNumber())){
@@ -59,6 +73,7 @@ public class DriverCardService {
      * @param driverCard
      * @return
      */
+    @Audited(operation = "UPDATE_DRIVER_CARD")
     @Transactional
     public DriverCard update(DriverCard driverCard) {
         if (driverCard.getIdDriverCard() == null) {
@@ -72,7 +87,7 @@ public class DriverCardService {
             throw new MainServiceException("Нельзя передать удостоверение на другого пользователя");
         }
 
-        dbDriverCard.setNumber(driverCard.getNumber() != null ? driverCard.getNumber() : dbDriverCard.getNumber());
+        dbDriverCard.setNumber(driverCard.getNumber() != null ? normalize(driverCard.getNumber()) : dbDriverCard.getNumber());
         dbDriverCard.setIssueDate(driverCard.getIssueDate() != null ? driverCard.getIssueDate() : dbDriverCard.getIssueDate());
         dbDriverCard.setExpiryDate(driverCard.getExpiryDate() != null ? driverCard.getExpiryDate() : dbDriverCard.getExpiryDate());
         dbDriverCard.setIssuedBy(driverCard.getIssuedBy() != null ? driverCard.getIssuedBy() : dbDriverCard.getIssuedBy());
@@ -80,9 +95,17 @@ public class DriverCardService {
         dbDriverCard.setBlock(driverCard.getBlock() != null ? driverCard.getBlock() : dbDriverCard.getBlock());
         dbDriverCard.setTypeCountry(driverCard.getTypeCountry() != null ? driverCard.getTypeCountry() : dbDriverCard.getTypeCountry());
 
-        return driverCardRepository.save(dbDriverCard);
+        DriverCard savedCard = driverCardRepository.save(dbDriverCard);
+
+        // Если ВУ стало заблокированным — деактивируем документы международного ВУ пользователя
+        if (Boolean.TRUE.equals(savedCard.getBlock())) {
+            deactivateInternationalDrivingDocuments(savedCard.getIdUser());
+        }
+
+        return savedCard;
     }
 
+    @Audited(operation = "DEACTIVATE_DRIVER_CARD")
     public Map<String, Object> deactivateDriverCard(Long idDriverCard) {
         Map<String,Object> response = new HashMap<>();
         try{
@@ -104,6 +127,9 @@ public class DriverCardService {
             driverCard.setBlock(true);
 
             driverCardRepository.save(driverCard);
+
+            // Деактивируем активные документы типа международное ВУ (4, 5) у данного пользователя
+            deactivateInternationalDrivingDocuments(driverCard.getIdUser());
 
             response.put("status",200);
             response.put("message","Успешно : пользователь деактивирован");
@@ -128,5 +154,46 @@ public class DriverCardService {
     public List<DriverCard> getDriverCardsByIdUser(Long idUser) {
         return driverCardRepository.findAllByIdUser(idUser);
 
+    }
+
+    /**
+     * При блокировке ВУ деактивируем (status → INACTIVE) все активные
+     * документы типа международное ВУ (documentTypeId 4, 5) данного пользователя.
+     */
+    @Transactional
+    void deactivateInternationalDrivingDocuments(Long idUser) {
+        if (idUser == null) {
+            return;
+        }
+
+        List<UserDocument> activeDocs =
+                userDocumentRepository
+                        .findAllByUserIdAndStatusOrderByValidUntilDesc(
+                                idUser,
+                                TechnicalInspectionStatus.ACTIVE
+                        );
+
+        List<UserDocument> intlDocs = activeDocs.stream()
+                .filter(d -> d.getDocumentTypeId() == DOCUMENT_TYPE_INTERNATIONAL_VU
+                        || d.getDocumentTypeId() == DOCUMENT_TYPE_INTERNATIONAL_VU_ALT)
+                .collect(Collectors.toList());
+
+        for (UserDocument doc : intlDocs) {
+            doc.setStatus(TechnicalInspectionStatus.CANCELLED);
+            doc.setUpdatedAt(LocalDateTime.now());
+            userDocumentRepository.save(doc);
+        }
+
+        if (!intlDocs.isEmpty()) {
+            log.info("Деактивированы документы международного ВУ (тип 4/5) для пользователя {}: {} шт.",
+                    idUser, intlDocs.size());
+        }
+    }
+
+    /**
+     * Нормализация значения перед сравнением: убираем крайние пробелы и схлопываем повторяющиеся.
+     */
+    private String normalize(String value) {
+        return value == null ? null : value.trim().replaceAll("\\s+", " ");
     }
 }

@@ -3,8 +3,11 @@ package dccargo.dcargoservice.service.dcargo;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import dccargo.dcargoservice.model.dcargo.*;
+import dccargo.dcargoservice.repository.dcargo.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,16 +17,6 @@ import dccargo.dcargoservice.dto.dcargo.mapper.TruckDTOMapper;
 import dccargo.dcargoservice.enums.TechnicalInspectionStatus;
 import dccargo.dcargoservice.enums.TireStatus;
 import dccargo.dcargoservice.enums.TruckEquipmentStatus;
-import dccargo.dcargoservice.model.dcargo.Truck;
-import dccargo.dcargoservice.model.dcargo.TruckDocument;
-import dccargo.dcargoservice.model.dcargo.TruckEquipment;
-import dccargo.dcargoservice.model.dcargo.TruckMileage;
-import dccargo.dcargoservice.model.dcargo.TruckTire;
-import dccargo.dcargoservice.repository.dcargo.TruckDocumentRepository;
-import dccargo.dcargoservice.repository.dcargo.TruckEquipmentRepository;
-import dccargo.dcargoservice.repository.dcargo.TruckMileageRepository;
-import dccargo.dcargoservice.repository.dcargo.TruckRepository;
-import dccargo.dcargoservice.repository.dcargo.TruckTireRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
 import lombok.RequiredArgsConstructor;
 
@@ -36,7 +29,9 @@ public class TruckDTOService {
     private final TruckEquipmentRepository truckEquipmentRepository;
     private final TruckTireRepository truckTireRepository;
     private final TruckMileageRepository truckMileageRepository;
-    
+    private final FuelCardRepository fuelCardRepository;
+    private final TruckFuelCardRepository truckFuelCardRepository;
+
     private final TruckDTOMapper truckDTOMapper;
     
     /**
@@ -75,12 +70,18 @@ public class TruckDTOService {
                                 PageRequest.of(0, 5)
                         );
 
+        FuelCard fuelCard = truckFuelCardRepository
+                .findFirstByIdTruckAndIsActiveTrueOrderByCreatedAtDesc(truckId)
+                .flatMap(link -> fuelCardRepository.findById(link.getIdFuelCard()))
+                .orElse(null);
+
         return truckDTOMapper.toDTO(
                 truck,
                 documents,
                 equipment,
                 tires,
-                mileageHistory
+                mileageHistory,
+                fuelCard
         );
     }
 
@@ -118,6 +119,33 @@ public class TruckDTOService {
 
         List<TruckMileage> mileageHistory =
                 truckMileageRepository.findAllByObjectIdIn(truckIds);
+
+        /*
+         * Активные топливные карты грузовиков.
+         * 1 запрос — активные связки truck_fuel_card;
+         * 1 запрос — сами карты fuel_card.
+         */
+        List<TruckFuelCard> activeLinks =
+                truckFuelCardRepository.findAllByIdTruckInAndIsActiveTrue(truckIds);
+
+        List<Long> fuelCardIds = activeLinks.stream()
+                .map(TruckFuelCard::getIdFuelCard)
+                .distinct()
+                .toList();
+
+        Map<Long, FuelCard> fuelCardsById = fuelCardIds.isEmpty()
+                ? Map.of()
+                : fuelCardRepository.findAllById(fuelCardIds).stream()
+                        .collect(Collectors.toMap(
+                                FuelCard::getId,
+                                card -> card
+                        ));
+
+        Map<Long, FuelCard> fuelCardByTruck = activeLinks.stream()
+                .collect(Collectors.toMap(
+                        TruckFuelCard::getIdTruck,
+                        link -> fuelCardsById.get(link.getIdFuelCard())
+                ));
 
         Map<Long, List<TruckDocument>> documentsByTruck =
                 documents.stream()
@@ -222,7 +250,9 @@ public class TruckDTOService {
                         mileageByTruck.getOrDefault(
                                 truck.getId(),
                                 List.of()
-                        )
+                        ),
+
+                        fuelCardByTruck.get(truck.getId())
                 ))
                 .toList();
     }

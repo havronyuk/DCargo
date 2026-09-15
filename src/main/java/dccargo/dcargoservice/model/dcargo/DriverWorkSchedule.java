@@ -94,6 +94,10 @@ public class DriverWorkSchedule {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "is_primary_driver")
+    private Boolean isPrimaryDriver;
+
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

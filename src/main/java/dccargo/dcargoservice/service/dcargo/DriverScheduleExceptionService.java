@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -66,6 +67,7 @@ public class DriverScheduleExceptionService {
         return saved;
     }
 
+    @Audited(operation = "UPDATE_DRIVER_SCHEDULE_EXCEPTION")
     @Transactional
     public DriverScheduleException update(
             Long id,

@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -111,6 +112,7 @@ public class TruckDocumentService {
      * <br>
      * <b>Важно: изменяются только поля, переданные в запросе.</b>
      */
+    @Audited(operation = "UPDATE_TRUCK_DOCUMENT")
     @Transactional
     public TruckDocument update(TruckDocument truckDocument) {
 

@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.audit.Audited;
 import dccargo.dcargoservice.enums.OrderTruckAssigmentStatus;
 import dccargo.dcargoservice.enums.RouteSheetStatus;
 import dccargo.dcargoservice.model.dcargo.OrderTruck;
@@ -38,6 +39,7 @@ public class OrderTruckService {
 
     }
 
+    @Audited(operation = "ASSIGN_TRUCK_USER_TO_ORDER")
     public OrderTruck assignTruckUserToOrder(Long idOrder, Long idTruck, Long idUser, String userAdd, Long idTruckUserAssigment) {
 
         // 1. Находим активные назначения

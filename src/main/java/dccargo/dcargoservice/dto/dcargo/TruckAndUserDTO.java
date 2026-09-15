@@ -24,5 +24,4 @@ public class TruckAndUserDTO {
     private BigDecimal maxWeightKg;
     private Integer maxEuroPallets;
 
-
 }

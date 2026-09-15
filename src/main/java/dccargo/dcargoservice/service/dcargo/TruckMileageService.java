@@ -3,6 +3,7 @@ package dccargo.dcargoservice.service.dcargo;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.enums.MileageObjectType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +58,7 @@ public class TruckMileageService {
     /**
      * Получить последнюю запись пробега автомобиля.
      */
-    public TruckMileage getLastMileage(Long truckId) {
+    public TruckMileage getLastMileage(Long truckId, LocalDateTime assignmentDateFrom) {
 
         if (truckId == null) {
             throw new MainServiceException("Не указан TruckId");
@@ -72,12 +73,20 @@ public class TruckMileageService {
         }
 
         return truckMileageRepository
-                .findFirstByObjectIdOrderByMileageDateDescIdDesc(truckId)
+                .findFirstByObjectIdAndObjectTypeAndAssignmentDateToLessThanEqualOrderByAssignmentDateToDescIdDesc(truckId, MileageObjectType.TRUCK,assignmentDateFrom )
                 .orElseThrow(() -> new MainServiceException(
                         "Для транспортного средства с id "
                                 + truckId
                                 + " пробег ещё не зафиксирован"
                 ));
+
+//        return truckMileageRepository
+//                .findFirstByObjectIdOrderByMileageDateDescIdDesc(truckId)
+//                .orElseThrow(() -> new MainServiceException(
+//                        "Для транспортного средства с id "
+//                                + truckId
+//                                + " пробег ещё не зафиксирован"
+//                ));
     }
 
     /**
@@ -109,6 +118,10 @@ public class TruckMileageService {
                     "Не указан пробег автомобиля"
             );
         }
+
+//        if(truckMileage.getAssignmentDateTo() == null){
+//            throw new MainServiceException("Не указана дата завершения пробега");
+//        }
 
         if (truckMileage.getMileage() < 0) {
             throw new MainServiceException(

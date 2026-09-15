@@ -1,11 +1,14 @@
 package dccargo.dcargoservice.repository.dcargo;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import dccargo.dcargoservice.enums.MileageObjectType;
@@ -13,8 +16,8 @@ import dccargo.dcargoservice.model.dcargo.TruckMileage;
 
 @Repository
 public interface TruckMileageRepository extends JpaRepository<TruckMileage, Long> {
-	
-	/**
+
+    /**
      * Получить всю историю пробега автомобиля.
      * Сначала возвращаются самые новые записи.
      */
@@ -34,7 +37,7 @@ public interface TruckMileageRepository extends JpaRepository<TruckMileage, Long
             Long truckId,
             Integer mileage
     );
-    
+
     List<TruckMileage> findByObjectIdOrderByMileageDateDesc(
             Long truckId,
             Pageable pageable
@@ -43,11 +46,11 @@ public interface TruckMileageRepository extends JpaRepository<TruckMileage, Long
     List<TruckMileage> findAllByObjectIdIn(
             Collection<Long> truckIds
     );
-    
+
     /**
      * Проверяет, была ли уже создана запись пробега объекта
      * на основании указанной родительской записи пробега.
-     *
+     * <p>
      * Например: был ли уже начислен пробег конкретному колесу
      * по конкретной записи пробега автомобиля.
      */
@@ -62,9 +65,18 @@ public interface TruckMileageRepository extends JpaRepository<TruckMileage, Long
      * с учётом типа объекта.
      */
     Optional<TruckMileage>
-            findFirstByObjectIdAndObjectTypeOrderByMileageDateDescIdDesc(
-                    Long objectId,
-                    MileageObjectType objectType
-            );
+    findFirstByObjectIdAndObjectTypeOrderByMileageDateDescIdDesc(
+            Long objectId,
+            MileageObjectType objectType
+    );
+
+
+    Optional<TruckMileage>
+    findFirstByObjectIdAndObjectTypeAndAssignmentDateToLessThanEqualOrderByAssignmentDateToDescIdDesc(
+            Long objectId,
+            MileageObjectType objectType,
+            LocalDateTime dateFrom
+    );
+
 
 }

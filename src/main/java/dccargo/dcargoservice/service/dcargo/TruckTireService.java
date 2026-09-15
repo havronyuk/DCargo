@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -74,6 +75,7 @@ public class TruckTireService {
         return truckTireRepository.save(truckTire);
     }
 
+    @Audited(operation = "UPDATE_TRUCK_TIRE")
     @Transactional
     public TruckTire update(TruckTire truckTire) {
 

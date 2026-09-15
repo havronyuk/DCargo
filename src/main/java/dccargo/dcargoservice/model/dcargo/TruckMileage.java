@@ -86,4 +86,7 @@ public class TruckMileage {
     /** Величина, добавленная к прошлому пробегу */
     private Integer mileageDelta;
 
+    @Column(name = "assignment_date_to")
+    private LocalDateTime assignmentDateTo;
+
 }

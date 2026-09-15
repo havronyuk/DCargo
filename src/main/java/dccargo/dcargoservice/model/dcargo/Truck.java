@@ -111,5 +111,13 @@ public class Truck {
     @Column(name = "initial_odometer_value")
     private Integer initialOdometerValue;
 
+    @Column(name = "body_height_mm")
+    private Integer bodyHeightMm;
+
+    @Column(name = "body_length_mm")
+    private Integer bodyLengthMm;
+
+    @Column(name = "body_width_mm")
+    private Integer bodyWidthMm;
 
 }

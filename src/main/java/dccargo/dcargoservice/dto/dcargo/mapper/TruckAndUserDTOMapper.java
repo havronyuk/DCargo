@@ -29,6 +29,8 @@ public class TruckAndUserDTOMapper {
         dto.setModel(truck.getModel());
         dto.setMaxWeightKg(truck.getMaxWeightKg());
         dto.setMaxEuroPallets(truck.getMaxEuroPallets());
+//        dto.setIsPrimaryDriver(truckUserAssignment.getIsPrimaryDriver());
+
 
         return dto;
     }
