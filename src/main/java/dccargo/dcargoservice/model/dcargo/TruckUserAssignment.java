@@ -84,7 +84,12 @@ public class TruckUserAssignment {
 	    @Column(name = "updated_at")
 	    private LocalDateTime updatedAt;
 
-	    /**
+//		@Column(name = "is_primary_driver")
+//		private Boolean isPrimaryDriver;
+
+
+
+	/**
 	     * ID пользователя, создавшего запись.
 	     * В БД внешний ключ на user.id_user.
 	     */

@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -104,6 +105,12 @@ public class TruckUserAssignmentService {
     @Transactional
     public TruckUserAssignment create(TruckUserAssignment assignment) {
 
+
+//        if(assignment.getIsPrimaryDriver() != null){
+//            validatePrimaryDriver(assignment);
+//
+//        }
+
         validateRequiredFields(assignment);
         validateReferences(assignment);
         validateDates(assignment.getDateFrom(), assignment.getDateTo());
@@ -157,14 +164,16 @@ public class TruckUserAssignmentService {
         assignmentRepository.save(assignment);
 
 
+        if(assignment.getAssignmentType().equals(TruckUserAssignmentType.ACTUAL)){
+            boolean isSheetExist = routeSheetRepository.existsByIdTruckUserAssignmentAndStatus(assignment.getId(), RouteSheetStatus.ACTIVE);
 
-        boolean isSheetExist = routeSheetRepository.existsByIdTruckUserAssignmentAndStatus(assignment.getId(), RouteSheetStatus.ACTIVE);
+            if(!isSheetExist){
+                RouteSheet routeSheet = new RouteSheet();
+                routeSheet.setIdTruckUserAssignment(assignment.getId());
+                routeSheet.setIdTruck(assignment.getTruckId());
+                routeSheetRepository.save(routeSheet);
+            }
 
-        if(!isSheetExist){
-            RouteSheet routeSheet = new RouteSheet();
-            routeSheet.setIdTruckUserAssignment(assignment.getId());
-            routeSheet.setIdTruck(assignment.getTruckId());
-            routeSheetRepository.save(routeSheet);
         }
 
 
@@ -172,6 +181,22 @@ public class TruckUserAssignmentService {
         return assignment;
     }
 
+//    private void validatePrimaryDriver(TruckUserAssignment assignment) {
+//        if(assignment.getIsPrimaryDriver()){
+//            Boolean isExistPrimary = assignmentRepository.existsByIsPrimaryDriverAndTruckIdAndAssignmentTypeAndStatus(
+//                    assignment.getIsPrimaryDriver(),
+//                    assignment.getTruckId(),
+//                    TruckUserAssignmentType.PERMANENT,
+//                    TruckUserAssignmentStatus.ACTIVE
+//            );
+//            if (isExistPrimary){
+//                throw new MainServiceException("Основной водитель на данном авто в указанном промежутке уже существует");
+//            }
+//        }
+//
+//    }
+
+    @Audited(operation = "UPDATE_TRUCK_USER_ASSIGNMENT")
     @Transactional
     public TruckUserAssignment update(
             TruckUserAssignment assignment) {
@@ -217,6 +242,11 @@ public class TruckUserAssignmentService {
                 assignment.getDateTo() != null
                         ? assignment.getDateTo()
                         : dbAssignment.getDateTo();
+
+
+//        if(assignment.getIsPrimaryDriver() != null){
+//            validatePrimaryDriver(assignment);
+//        }
 
         validateTruckId(resultTruckId);
         validateUserId(resultUserId);
@@ -273,6 +303,10 @@ public class TruckUserAssignmentService {
         dbAssignment.setStatus(resultStatus);
         dbAssignment.setDateFrom(resultDateFrom);
 
+//        if(assignment.getIsPrimaryDriver() != null){
+//            dbAssignment.setIsPrimaryDriver(assignment.getIsPrimaryDriver());
+//        }
+
         if (assignment.getDateTo() != null) {
             dbAssignment.setDateTo(assignment.getDateTo());
         }
@@ -309,6 +343,7 @@ public class TruckUserAssignmentService {
      * Штатное завершение закрепления.
      * Завершает с текущей датой и временем
      */
+    @Audited(operation = "COMPLETE_TRUCK_USER_ASSIGNMENT")
     @Transactional
     public TruckUserAssignment complete(Long id) {
 
@@ -337,6 +372,7 @@ public class TruckUserAssignmentService {
      * @param dateTime дата и время завершения
      * @return
      */
+    @Audited(operation = "COMPLETE_TRUCK_USER_ASSIGNMENT")
     @Transactional
     public TruckUserAssignment complete(Long id, LocalDateTime dateTime) {
     	
@@ -364,18 +400,45 @@ public class TruckUserAssignmentService {
     /**
      * Отмена закрепления.
      */
+    @Audited(operation = "CANCEL_TRUCK_USER_ASSIGNMENT")
     @Transactional
     public TruckUserAssignment cancel(Long id) {
 
+        System.out.println("=== CANCEL ASSIGNMENT START ===");
+        System.out.println("Assignment ID: " + id);
+
         TruckUserAssignment assignment = getById(id);
+
+        System.out.println("Assignment найден: " + (assignment != null));
+
+        if (assignment == null) {
+            System.out.println("Assignment == null");
+            throw new MainServiceException("Закрепление не найдено");
+        }
+
+        System.out.println("Assignment ID: " + assignment.getId());
+        System.out.println("Truck ID: " + assignment.getTruckId());
+        System.out.println("User ID: " + assignment.getUserId());
+        System.out.println("Status ДО отмены: " + assignment.getStatus());
+        System.out.println("DateFrom: " + assignment.getDateFrom());
+        System.out.println("DateTo ДО отмены: " + assignment.getDateTo());
 
         if (assignment.getStatus()
                 != TruckUserAssignmentStatus.ACTIVE) {
+
+            System.out.println(
+                    "ОТМЕНА НЕВОЗМОЖНА. Текущий статус: "
+                            + assignment.getStatus()
+            );
 
             throw new MainServiceException(
                     "Можно отменить только активное закрепление"
             );
         }
+
+        // =========================
+        // Отмена Assignment
+        // =========================
 
         assignment.setStatus(
                 TruckUserAssignmentStatus.CANCELLED
@@ -383,30 +446,180 @@ public class TruckUserAssignmentService {
 
         assignment.setDateTo(LocalDateTime.now());
 
+        System.out.println("Assignment новый статус: "
+                + assignment.getStatus());
 
-        boolean isExistSheet = routeSheetRepository.existsByIdTruckUserAssignmentAndStatus(assignment.getTruckId(), RouteSheetStatus.ACTIVE);
+        System.out.println("Assignment новый DateTo: "
+                + assignment.getDateTo());
 
-        if(isExistSheet){
-            RouteSheet routeSheet = routeSheetRepository.findByIdTruckUserAssignmentAndStatus(assignment.getId(),RouteSheetStatus.ACTIVE);
 
-            routeSheet.setStatus(RouteSheetStatus.CANCELLED);
-            routeSheet.setUpdatedAt(LocalDateTime.now());
+        // =========================
+        // RouteSheet
+        // =========================
 
-            routeSheetRepository.save(routeSheet);
+        System.out.println("=== ПРОВЕРКА ROUTE SHEET ===");
+
+        System.out.println("Ищем RouteSheet по truckId: "
+                + assignment.getTruckId());
+
+        boolean isExistSheet =
+                routeSheetRepository
+                        .existsByIdTruckUserAssignmentAndStatus(
+                                assignment.getId(),
+                                RouteSheetStatus.ACTIVE
+                        );
+
+        System.out.println("RouteSheet ACTIVE существует: "
+                + isExistSheet);
+
+        if (isExistSheet) {
+
+            System.out.println(
+                    "Ищем ACTIVE RouteSheet по assignmentId: "
+                            + assignment.getId()
+            );
+
+            RouteSheet routeSheet =
+                    routeSheetRepository
+                            .findByIdTruckUserAssignmentAndStatus(
+                                    assignment.getId(),
+                                    RouteSheetStatus.ACTIVE
+                            );
+
+            System.out.println("RouteSheet найден: "
+                    + (routeSheet != null));
+
+            if (routeSheet != null) {
+
+                System.out.println("RouteSheet ID: "
+                        + routeSheet.getIdRouteSheet());
+
+                System.out.println("RouteSheet status ДО: "
+                        + routeSheet.getStatus());
+
+                routeSheet.setStatus(
+                        RouteSheetStatus.CANCELLED
+                );
+
+                routeSheet.setUpdatedAt(
+                        LocalDateTime.now()
+                );
+
+                System.out.println("RouteSheet status ПОСЛЕ: "
+                        + routeSheet.getStatus());
+
+                System.out.println("RouteSheet updatedAt: "
+                        + routeSheet.getUpdatedAt());
+
+                RouteSheet savedRouteSheet =
+                        routeSheetRepository.save(routeSheet);
+
+                System.out.println("RouteSheet СОХРАНЁН");
+                System.out.println("RouteSheet ID: "
+                        + savedRouteSheet.getIdRouteSheet());
+                System.out.println("RouteSheet итоговый status: "
+                        + savedRouteSheet.getStatus());
+
+            } else {
+                System.out.println(
+                        "ВНИМАНИЕ: existsBy... вернул TRUE, "
+                                + "но findBy... вернул NULL"
+                );
+            }
+
+        } else {
+            System.out.println(
+                    "ACTIVE RouteSheet не найден — статус RouteSheet не меняем"
+            );
         }
 
-        boolean isExistTruckOrder = orderTruckRepository.existsByIdTruckUserAssigmentAndStatus(assignment.getId(), OrderTruckAssigmentStatus.ACTIVE);
 
-        if(isExistTruckOrder){
-            OrderTruck orderTruck = orderTruckRepository.findByIdTruckUserAssigmentAndStatus(assignment.getId(), OrderTruckAssigmentStatus.ACTIVE);
+        // =========================
+        // OrderTruck
+        // =========================
 
-            orderTruck.setStatus(OrderTruckAssigmentStatus.CANCELLED);
+        System.out.println("=== ПРОВЕРКА ORDER TRUCK ===");
 
-            orderTruckRepository.save(orderTruck);
+        boolean isExistTruckOrder =
+                orderTruckRepository
+                        .existsByIdTruckUserAssigmentAndStatus(
+                                assignment.getId(),
+                                OrderTruckAssigmentStatus.ACTIVE
+                        );
 
+        System.out.println("OrderTruck ACTIVE существует: "
+                + isExistTruckOrder);
+
+        if (isExistTruckOrder) {
+
+            OrderTruck orderTruck =
+                    orderTruckRepository
+                            .findByIdTruckUserAssigmentAndStatus(
+                                    assignment.getId(),
+                                    OrderTruckAssigmentStatus.ACTIVE
+                            );
+
+            System.out.println("OrderTruck найден: "
+                    + (orderTruck != null));
+
+            if (orderTruck != null) {
+
+                System.out.println("OrderTruck ID: "
+                        + orderTruck.getId());
+
+                System.out.println("OrderTruck status ДО: "
+                        + orderTruck.getStatus());
+
+                orderTruck.setStatus(
+                        OrderTruckAssigmentStatus.CANCELLED
+                );
+
+                System.out.println("OrderTruck status ПОСЛЕ: "
+                        + orderTruck.getStatus());
+
+                OrderTruck savedOrderTruck =
+                        orderTruckRepository.save(orderTruck);
+
+                System.out.println("OrderTruck СОХРАНЁН");
+                System.out.println("OrderTruck ID: "
+                        + savedOrderTruck.getId());
+                System.out.println("OrderTruck итоговый status: "
+                        + savedOrderTruck.getStatus());
+
+            } else {
+                System.out.println(
+                        "ВНИМАНИЕ: existsBy... TRUE, "
+                                + "но findBy... вернул NULL"
+                );
+            }
+
+        } else {
+            System.out.println(
+                    "ACTIVE OrderTruck не найден"
+            );
         }
 
-        return assignmentRepository.save(assignment);
+
+        // =========================
+        // Сохранение Assignment
+        // =========================
+
+        TruckUserAssignment savedAssignment =
+                assignmentRepository.save(assignment);
+
+        System.out.println("=== ASSIGNMENT СОХРАНЁН ===");
+        System.out.println("Assignment ID: "
+                + savedAssignment.getId());
+
+        System.out.println("Assignment status: "
+                + savedAssignment.getStatus());
+
+        System.out.println("Assignment DateTo: "
+                + savedAssignment.getDateTo());
+
+        System.out.println("=== CANCEL ASSIGNMENT END ===");
+
+        return savedAssignment;
     }
 
     private void completeCurrentActualAssignment(Long truckId) {

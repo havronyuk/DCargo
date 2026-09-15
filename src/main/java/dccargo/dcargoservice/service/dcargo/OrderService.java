@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.audit.Audited;
 import dccargo.dcargoservice.model.dcargo.Order;
 import dccargo.dcargoservice.model.dcargo.OrderPoint;
 import dccargo.dcargoservice.repository.dcargo.OrderRepository;
@@ -154,6 +155,7 @@ public class OrderService {
 
     }
 
+    @Audited(operation = "UPDATE_ORDER")
     public Order updateOrder(Order order) {
 
         if(order.getIdOrder() == null){

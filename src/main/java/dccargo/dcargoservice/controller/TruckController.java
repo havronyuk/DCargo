@@ -99,6 +99,7 @@ public class TruckController {
                 truckDTOService.getAll()
         );
     }
+
     
     /**
      * Метод сохранения создания одной машины.
@@ -140,6 +141,7 @@ public class TruckController {
     	List<TruckDocument> truckDocument = truckDocumentService.getByTruckId(id);
         return ResponseEntity.ok(truckDocument);
     }
+
     
     @PostMapping("/createNewTruckDocument")
     public ResponseEntity<TruckDocument> createTruckDocument(@RequestBody TruckDocument truckDocument) {
@@ -320,11 +322,12 @@ public class TruckController {
     /**
      * Получить последний зафиксированный пробег автомобиля.
      */
-    @GetMapping("/getLastTruckMileage/{truckId}")
+    @GetMapping("/getLastTruckMileage/{truckId}/{assignmentDateFrom}")
     public TruckMileage getLastTruckMileage(
-            @PathVariable Long truckId) {
+            @PathVariable Long truckId,
+            @PathVariable LocalDateTime assignmentDateFrom) {
 
-        return truckMileageService.getLastMileage(truckId);
+        return truckMileageService.getLastMileage(truckId,assignmentDateFrom);
     }
 
     /**
@@ -443,14 +446,14 @@ public class TruckController {
      * Обязательно передать id.
      * Остальные поля обновляются только если не null.
      */
-    @Deprecated
+//    @Deprecated
     @PostMapping("/updateTruckUserAssignment")
-    public ResponseEntity<String> update(
+    public ResponseEntity<TruckUserAssignment> update(
             @RequestBody TruckUserAssignment assignment) {
 
-//        return ResponseEntity.ok(assignmentService.update(assignment));
-    	return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("Метод отключён");
+        return ResponseEntity.ok(assignmentService.update(assignment));
+//    	return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                .body("Метод отключён");
     }
     
     /**

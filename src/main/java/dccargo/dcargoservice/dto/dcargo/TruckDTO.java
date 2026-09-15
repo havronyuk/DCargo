@@ -83,6 +83,15 @@ public class TruckDTO {
     private Integer initialOdometerValue;
 
 
+    private Integer bodyHeightMm;
+
+
+    private Integer bodyLengthMm;
+
+
+    private Integer bodyWidthMm;
+
+
     /*
      * Текущий пробег
      */

@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -63,15 +64,20 @@ public class DriverWorkScheduleService {
 		long intersections = driverWorkScheduleRepository.countUserScheduleIntersections(assignment.getUserId(),
 				assignment.getDateFrom(), dateTo, null);
 
-		if (intersections > 0) {
-			throw new MainServiceException("У водителя с ID " + assignment.getUserId()
-					+ " уже существует график, пересекающийся " + "с указанным периодом");
-		}
+//		if (intersections > 0) {
+//			throw new MainServiceException("У водителя с ID " + assignment.getUserId()
+//					+ " уже существует график, пересекающийся " + "с указанным периодом");
+//		}
 
 		assignment.setId(null);
 
 		if (assignment.getStatus() == null) {
 			assignment.setStatus(STATUS_ACTIVE);
+		}
+
+
+		if(assignment.getIsPrimaryDriver() != null){
+			validatePrimaryDriver(assignment);
 		}
 
 		DriverWorkSchedule saved = driverWorkScheduleRepository.save(assignment);
@@ -86,6 +92,7 @@ public class DriverWorkScheduleService {
 	 * Закрепляет сразу двух водителей за автомобилем с противоположными фазами
 	 * графика.
 	 */
+	@Audited(operation = "ASSIGN_TWO_DRIVERS")
 	@Transactional
 	public List<DriverWorkSchedule> assignTwoDrivers(AssignTruckDriversDTO request) {
 		validateTwoDriversRequest(request);
@@ -132,9 +139,14 @@ public class DriverWorkScheduleService {
 		return saved;
 	}
 
+	@Audited(operation = "UPDATE_DRIVER_WORK_SCHEDULE")
 	@Transactional
 	public DriverWorkSchedule update(Long id, DriverWorkSchedule request) {
 		DriverWorkSchedule existing = getById(id);
+
+		if(request.getIsPrimaryDriver() != null){
+			validatePrimaryDriver(request);
+		}
 
 		if (request.getTruckId() != null) {
 			existing.setTruckId(request.getTruckId());
@@ -170,6 +182,8 @@ public class DriverWorkScheduleService {
 			existing.setStatus(request.getStatus());
 		}
 
+		existing.setIsPrimaryDriver(request.getIsPrimaryDriver());
+
 		validateAssignment(existing);
 
 		WorkSchedule schedule = workScheduleService.getById(existing.getScheduleId());
@@ -183,6 +197,28 @@ public class DriverWorkScheduleService {
 		return existing;
 	}
 
+	private void validatePrimaryDriver(DriverWorkSchedule request) {
+
+		if (!Boolean.TRUE.equals(request.getIsPrimaryDriver())) {
+			return;
+		}
+
+		long count = driverWorkScheduleRepository.countActivePrimaryDriverOverlap(
+				request.getTruckId(),
+				request.getDateFrom(),
+				request.getDateTo(),
+				request.getId()
+		);
+
+		if (count > 0) {
+			throw new MainServiceException(
+					"На автомобиле уже назначен основной водитель " +
+							"на пересекающийся период"
+			);
+		}
+	}
+
+	@Audited(operation = "CLOSE_DRIVER_WORK_SCHEDULE")
 	@Transactional
 	public DriverWorkSchedule close(Long id, LocalDate dateTo) {
 		DriverWorkSchedule assignment = getById(id);
@@ -355,7 +391,7 @@ public class DriverWorkScheduleService {
 		return DriverWorkDayDTO.builder().date(date).truckId(assignment.getTruckId()).userId(assignment.getUserId())
 				.scheduledWorking(scheduledWorking).actualWorking(actualWorking).status(status)
 				.statusDescription(statusDescription).replacementUserId(replacementUserId)
-				.exceptionApplied(exceptionApplied).comment(comment).build();
+				.exceptionApplied(exceptionApplied).comment(comment).isPrimaryDriver(assignment.getIsPrimaryDriver()).build();
 	}
 
 	private boolean isWorkingDay(LocalDate date, DriverWorkSchedule assignment, WorkSchedule schedule) {

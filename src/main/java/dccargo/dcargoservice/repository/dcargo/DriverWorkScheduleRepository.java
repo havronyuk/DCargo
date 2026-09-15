@@ -109,4 +109,26 @@ public interface DriverWorkScheduleRepository extends JpaRepository<DriverWorkSc
             @Param("dateTo") LocalDate dateTo
     );
 
+    @Query("""
+    SELECT COUNT(d)
+    FROM DriverWorkSchedule d
+    WHERE d.truckId = :truckId
+      AND d.status = 'ACTIVE'
+      AND d.isPrimaryDriver = true
+      AND (:id IS NULL OR d.id <> :id)
+      AND (
+            (:dateTo IS NULL AND d.dateTo IS NULL)
+            OR (:dateTo IS NULL AND d.dateTo >= :dateFrom)
+            OR (d.dateTo IS NULL AND d.dateFrom <= :dateTo)
+            OR (d.dateFrom <= :dateTo AND d.dateTo >= :dateFrom)
+          )
+""")
+    long countActivePrimaryDriverOverlap(
+            @Param("truckId") Long truckId,
+            @Param("dateFrom") LocalDate dateFrom,
+            @Param("dateTo") LocalDate dateTo,
+            @Param("id") Long id
+    );
+
+
 }

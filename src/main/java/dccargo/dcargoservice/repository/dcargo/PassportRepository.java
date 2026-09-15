@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface PassportRepository extends JpaRepository<Passport, Long> {
 
-    boolean existsByPersonalNumber(String personalNumber);
+    List<Passport> findAllByPersonalNumber(String personalNumber);
 
     boolean existsByIdUserAndBlock(Long idUser,Boolean block);
 

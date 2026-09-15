@@ -1,6 +1,7 @@
 package dccargo.dcargoservice.service.dcargo;
 
 
+import dccargo.dcargoservice.audit.Audited;
 import dccargo.dcargoservice.config.SecurityConfig;
 import dccargo.dcargoservice.enums.TruckStatus;
 import dccargo.dcargoservice.model.dcargo.Truck;
@@ -38,37 +39,37 @@ public class TruckService {
             );
         }
 
-    	if(truck.getInternalId() != null){
-            if (truckRepository.existsByInternalId(truck.getInternalId())) {
-                throw new MainServiceException(
-                        "Автомобиль с внутренним id "
-                                + truck.getInternalId()
-                                + " уже существует"
-                );
-            }
-        }
+//    	if(truck.getInternalId() != null){
+//            if (truckRepository.existsByInternalId(truck.getInternalId())) {
+//                throw new MainServiceException(
+//                        "Автомобиль с внутренним id "
+//                                + truck.getInternalId()
+//                                + " уже существует"
+//                );
+//            }
+//        }
 
 
-    	if(truck.getInternalNumber() != null){
-            if (truckRepository.existsByInternalNumber(truck.getInternalNumber())) {
-                throw new MainServiceException(
-                        "Автомобиль с внутренним номером "
-                                + truck.getInternalNumber()
-                                + " уже существует"
-                );
-            }
-        }
+//    	if(truck.getInternalNumber() != null){
+//            if (truckRepository.existsByInternalNumber(truck.getInternalNumber())) {
+//                throw new MainServiceException(
+//                        "Автомобиль с внутренним номером "
+//                                + truck.getInternalNumber()
+//                                + " уже существует"
+//                );
+//            }
+//        }
 
-
-    	if(truck.getGarageNumber() != null){
-            if (truckRepository.existsByGarageNumber(truck.getGarageNumber())) {
-                throw new MainServiceException(
-                        "Автомобиль с гаражным номером "
-                                + truck.getGarageNumber()
-                                + " уже существует"
-                );
-            }
-        }
+//
+//    	if(truck.getGarageNumber() != null){
+//            if (truckRepository.existsByGarageNumber(truck.getGarageNumber())) {
+//                throw new MainServiceException(
+//                        "Автомобиль с гаражным номером "
+//                                + truck.getGarageNumber()
+//                                + " уже существует"
+//                );
+//            }
+//        }
 
     	
     	if (truck.getVin() != null && truckRepository.existsByVin(truck.getVin())) {
@@ -94,6 +95,7 @@ public class TruckService {
      * @param truck
      * @return
      */
+    @Audited(operation = "UPDATE_TRUCK")
     @Transactional
     public Truck update(Truck truck) {
     	if(truck.getId() == null ) {

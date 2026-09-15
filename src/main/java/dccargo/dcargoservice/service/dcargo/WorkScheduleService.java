@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class WorkScheduleService {
         return saved;
     }
 
+    @Audited(operation = "UPDATE_WORK_SCHEDULE")
     @Transactional
     public WorkSchedule update(
             Long id,

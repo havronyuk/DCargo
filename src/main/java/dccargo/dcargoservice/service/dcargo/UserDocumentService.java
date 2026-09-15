@@ -1,8 +1,11 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import dccargo.dcargoservice.model.dcargo.DriverCard;
+import dccargo.dcargoservice.repository.dcargo.DriverCardRepository;
 import dccargo.dcargoservice.util.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,13 @@ public class UserDocumentService {
 
 	private final UserDocTypeRepository userDocTypeRepository;
 
+	private final DriverCardRepository driverCardRepository;
+
 	private final SecurityUtils securityUtils;
+
+	// Типы документов, привязанные к водительскому удостоверению
+	private static final long DOCUMENT_TYPE_INTERNATIONAL_VU = 4L;
+	private static final long DOCUMENT_TYPE_INTERNATIONAL_VU_ALT = 5L;
 
 	/**
 	 * Получить все документы пользователя.
@@ -97,6 +106,15 @@ public class UserDocumentService {
 			);
 		}
 
+		// Если тип документа — международное ВУ (4 или 5), проверяем по активной DriverCard
+		if (isInternationalDrivingDocument(userDocument.getDocumentTypeId())) {
+			validateInternationalDrivingDocument(userDocument);
+			if (userDocument.getInternationalDriverCardNumber() != null) {
+				userDocument.setInternationalDriverCardNumber(
+						normalize(userDocument.getInternationalDriverCardNumber()));
+			}
+		}
+
 //		if (userDocument.getDocumentNumber() != null
 //				&& userDocumentRepository.existsByDocumentNumber(
 //						userDocument.getDocumentNumber())) {
@@ -121,6 +139,7 @@ public class UserDocumentService {
 	 * Обновление документа пользователя.
 	 * Изменяются только поля, переданные в запросе (не null).
 	 */
+	@Audited(operation = "UPDATE_USER_DOCUMENT")
 	@Transactional
 	public UserDocument update(UserDocument userDocument) {
 
@@ -248,6 +267,53 @@ public class UserDocumentService {
 		dbDocument.setUpdatedAt(LocalDateTime.now());
 
 		return userDocumentRepository.save(dbDocument);
+	}
+
+	/**
+	 * Проверка: тип документа — международное ВУ (4 или 5).
+	 */
+	private boolean isInternationalDrivingDocument(Long documentTypeId) {
+		return DOCUMENT_TYPE_INTERNATIONAL_VU == documentTypeId
+				|| DOCUMENT_TYPE_INTERNATIONAL_VU_ALT == documentTypeId;
+	}
+
+	/**
+	 * Нормализация значения перед сравнением: убираем крайние пробелы и схлопываем повторяющиеся.
+	 */
+	private String normalize(String value) {
+		return value == null ? null : value.trim().replaceAll("\\s+", " ");
+	}
+
+	/**
+	 * При создании документа типа 4/5:
+	 * 1. Проверяем, что у пользователя есть актуальное (block=false) ВУ.
+	 * 2. Проверяем, что номер в DocumentNumber совпадает с number.active DriverCard.
+	 */
+	private void validateInternationalDrivingDocument(UserDocument userDocument) {
+
+		DriverCard activeCard = driverCardRepository
+				.findByIdUserAndBlock(userDocument.getUserId(), false)
+				.orElse(null);
+
+		if (activeCard == null) {
+			throw new MainServiceException(
+					"У пользователя нет действующего водительского удостоверения. "
+							+ "Невозможно создать документ типа «Международное ВУ»"
+			);
+		}
+
+		if (userDocument.getInternationalDriverCardNumber() != null
+				&& activeCard.getNumber() != null
+				&& !normalize(userDocument.getInternationalDriverCardNumber())
+						.equals(normalize(activeCard.getNumber()))) {
+			throw new MainServiceException(
+					"Номер в документе ("
+							+ userDocument.getInternationalDriverCardNumber()
+							+ ") не соответствует номеру действующего ВУ ("
+							+ activeCard.getNumber()
+							+ ")"
+			);
+		}
 	}
 
 }

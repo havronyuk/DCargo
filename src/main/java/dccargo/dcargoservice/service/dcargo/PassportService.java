@@ -1,5 +1,6 @@
 package dccargo.dcargoservice.service.dcargo;
 
+import dccargo.dcargoservice.audit.Audited;
 import dccargo.dcargoservice.model.dcargo.Passport;
 import dccargo.dcargoservice.repository.dcargo.PassportRepository;
 import dccargo.dcargoservice.service.dcargo.exception.MainServiceException;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -36,12 +38,59 @@ public class PassportService {
             throw new MainServiceException("Создание новой записи запрещено. Заблокируйте актуальную запись");
         }
 
-        if(passportRepository.existsByPersonalNumber(passport.getPersonalNumber())){
-            throw new MainServiceException("Паспорт с данным идентификационным  номером уже существует");
+//        if(passport.getNumber() != null && passport.getSeries() != null){
+//
+//        }
+
+
+        if(passport.getPersonalNumber() != null){
+            List<Passport> passportsWithNumber = passportRepository.findAllByPersonalNumber(passport.getPersonalNumber());
+            boolean belongsToOtherUser = passportsWithNumber.stream()
+                    .anyMatch(p -> !p.getIdUser().equals(passport.getIdUser()));
+            if(belongsToOtherUser){
+                throw new MainServiceException("Паспорт с данным идентификационным  номером уже существует");
+            }
         }
 
+        // Идентификационный номер должен быть всегда один у пользователя
+        // при смене между Паспорт РБ и ID-карта РБ (и наоборот),
+        // Паспорт РБ и Паспорт РБ, ID-карта РБ и ID-карта РБ.
+        // Вид на жительство и прочие типы — не проверяем.
+        List<Passport> userPassports = passportRepository.findAllByIdUser(passport.getIdUser());
+        String previousNumber = userPassports.stream()
+                .filter(p -> isPassportOrIdCard(p.getType()))
+                .map(Passport::getPersonalNumber)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        if(previousNumber != null
+                && passport.getPersonalNumber() != null
+                && !normalize(previousNumber).equals(normalize(passport.getPersonalNumber()))){
+            throw new MainServiceException(
+                    "Идентификационный номер не соответствует номеру ранее выданного документа пользователя. "
+                            + "При смене Паспорт РБ / ID-карта РБ номер должен оставаться прежним"
+            );
+        }
 
         return passportRepository.save(passport);
+    }
+
+    /**
+     * Нормализация значения перед сравнением: убираем крайние пробелы и схлопываем повторяющиеся.
+     */
+    private String normalize(String value) {
+        return value == null ? null : value.trim().replaceAll("\\s+", " ");
+    }
+
+    /**
+     * Принадлежит ли тип документа к группе «Паспорт РБ / ID-карта РБ»,
+     * для которой действует правило единообразия идентификационного номера.
+     */
+    private boolean isPassportOrIdCard(String type) {
+        return type != null
+                && ("Паспорт РБ".equals(type.trim())
+                    || "ID-карта РБ".equals(type.trim()));
     }
 
 
@@ -50,6 +99,7 @@ public class PassportService {
      * @param passport
      * @return
      */
+    @Audited(operation = "UPDATE_PASSPORT")
     @Transactional
     public Passport update(Passport passport) {
         if (passport.getIdPassport() == null) {
@@ -81,6 +131,7 @@ public class PassportService {
         return updatedPassport;
     }
 
+    @Audited(operation = "DEACTIVATE_PASSPORT")
     public Map<String, Object> deactivatePassport(Long idPassport) {
         Map<String,Object> response = new HashMap<>();
         try{

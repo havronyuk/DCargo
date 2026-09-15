@@ -2,6 +2,7 @@ package dccargo.dcargoservice.dto.dcargo;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -54,5 +55,7 @@ public class DriverWorkDayDTO {
     private Boolean exceptionApplied;
 
     private String comment;
+
+    private Boolean isPrimaryDriver;
 
 }
